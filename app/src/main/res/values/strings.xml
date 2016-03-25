@@ -1,5 +1,20 @@
 <resources>
     <string name="app_name">Sample Browser</string>
     <string name="help_title">Sample Browser Help</string>
-    <string name="help_msg">Controller shortcuts:\nNV=voice entry\nY=focus to top\nB=back\nLeft shoulder=zoomout\nRight shoulder=zoomin\nLeft stick=scroll\nRight stick=rsmouse\nNo caching, optimizations, etc\naddress entry rules:if we think it is a valid URL, load URL. Else kick off google search with those terms</string>
+    <string name="help_msg">Controller shortcuts:\nVoice Button = Voice Search\nY Button = Focus to Help Button on Top Bar\nB Button = Back\nLeft Shoulder = Zoom Out\nRight Shoulder = Zoom In\nLeft Stick = Pan on Page/Scroll\nRight Stick = Virtual Mouse\nAddress Entry Rules - If we think it is a valid URL, we load it. Otherwise we kick off a google search with the terms in the address bar\nThis sample does support javascript and cookies.\nNote that there is no caching, optimizations or cookie security in this simple example.</string>
+
+<!--
+Controller shortcuts:
+Voice Button = Voice Search
+Y Button = Focus to Help Button on Top Bar
+B Button = Back
+Left Shoulder = Zoom Out
+Right Shoulder = Zoom In
+Left Stick = Pan on Page/Scroll
+Right Stick = Virtual Mouse
+Address Entry Rules - If we think it is a valid URL, we load it. Otherwise we kick off a google search with the terms in the address bar
+This sample does support javascript and cookies.
+Note that there is no caching, optimizations or cookie security in this simple example.
+-->
+
 </resources>
