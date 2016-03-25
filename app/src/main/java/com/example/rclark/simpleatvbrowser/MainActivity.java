@@ -1,0 +1,368 @@
+package com.example.rclark.simpleatvbrowser;
+
+/*
+    Hack browser for ATV.
+    Started with a phone/tablet project and just added the LEANBACK intents + some controller support.
+    Redid into a second project "HackATVBrowser2" which starts with an ATV project (may make some difference)
+
+ */
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.Bundle;
+import android.speech.RecognizerIntent;
+import android.text.InputType;
+import android.util.Patterns;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.net.CookieHandler;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.util.ArrayList;
+
+public class MainActivity extends Activity implements View.OnClickListener {
+
+    private WebView mView;
+    private EditText mEdit;
+    private View mvBack;
+    private View mvVoice;
+    private View mvRefresh;
+    private View mvHelp;
+
+    private int mZoom = 0;
+    private final static float ZOOMIN_VALUE = 1.5f;
+    private final static float ZOOMOUT_VALUE = 0.66666667f;
+    private final static int PAN_SCALE_FACTOR = 70;
+    //The UA string to convince websites we are a desktop browser...
+    private final static String UA_DESKTOP = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/20100101 Firefox/4.0";
+
+    private boolean mbDontUpdate = false;
+
+    protected static final int RESULT_SPEECH = 1;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        //Get views
+        mView = (WebView) findViewById(R.id.webview);
+        mEdit = (EditText) findViewById(R.id.search);
+
+        //Okay - some weirdness happening in button processing. Not getting onClick
+        //events for imagebuttons. No idea why. Hack it up by looking for button A matching the view
+        //and dispatch directly for now.
+        mvBack = findViewById(R.id.back);
+        mvVoice = findViewById(R.id.voice);
+        mvRefresh = findViewById(R.id.refresh);
+        mvHelp = findViewById(R.id.help);
+
+        //Handle cookies here...
+        android.webkit.CookieManager.getInstance().setAcceptCookie(true);
+
+        //Enable javascript
+        WebSettings webSettings = mView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+
+        //Set up to support zoom...
+        webSettings.setSupportZoom(true);
+
+        //try to set the desktop mode for web page load...
+        webSettings.setLoadWithOverviewMode(true);
+        webSettings.setUseWideViewPort(true);
+
+        //Do we need below?
+        //webSettings.setBuiltInZoomControls(true);
+        //webSettings.setDisplayZoomControls(false);
+
+        webSettings.setUserAgentString(UA_DESKTOP);
+
+        //Set webview to our overriden class...
+        mView.setWebViewClient(new MyWebViewClient());
+
+        //set the initial edittext...
+        mEdit.setText("www.google.com");
+
+        //and load initial webview
+        loadPage();
+
+        //set focus to voice input
+        mvVoice.requestFocus();
+
+        //hide keyboard
+        hideKeyboard();
+
+
+        //process edittext
+        mEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if ( (actionId == EditorInfo.IME_ACTION_DONE) || ((event.getKeyCode() == KeyEvent.KEYCODE_ENTER) && (event.getAction() == KeyEvent.ACTION_DOWN ))){
+                    cleanUpEdit();
+                    loadPage();
+                    return true;
+                }
+                else{
+                    return false;
+                }
+            }
+        });
+    }
+
+    private void loadPage() {
+        String url = mEdit.getText().toString();
+
+        String http = url;
+
+        if (!http.contains("http://")) {
+            http = "http://" + url;
+        }
+
+        //note - hide keyboard if showing...
+        hideKeyboard();
+
+        if (isValidUrl(http)) {
+            mbDontUpdate = true;
+            mView.loadUrl(http);
+        } else {
+            //do a google search
+            http = "http://www.google.com/#q=" + url;
+            mView.loadUrl(http);
+        }
+    }
+
+    private void hideKeyboard() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
+    //android keyboards have a really irritating habit of inserting spaces after period. This is not due to edit
+    //text control. This is a keyboard issue. So fix this here. (look to see if you have a web address and remove space).
+    //2 . = web address
+    private void cleanUpEdit() {
+        String input = mEdit.getText().toString();
+        String web = "";
+        int count = 0;
+
+        for (int i = 0; i < input.length(); i++) {
+            if (input.substring(i,i+1).equals(".")) {
+                count++;
+            }
+
+            if (!input.substring(i,i+1).equals(" ")) {
+                web = web + input.substring(i,i+1);
+            }
+        }
+
+        if (count == 2) {
+            mEdit.setText(web);
+        }
+
+    }
+
+
+    private boolean isValidUrl(String url) {
+
+        return Patterns.WEB_URL.matcher(url).matches();
+    }
+
+
+    //Handle a few special keys
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        boolean beatkey = false;
+        if (event != null) {
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_Y) {
+                    mvHelp.requestFocus();
+                } else if (event.getKeyCode() == KeyEvent.KEYCODE_SEARCH) {
+                    beatkey = true;
+                    doVoiceSearch();
+                } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_L1) {
+                    if (mZoom > 0) {
+                        mZoom--;
+                        mView.zoomBy(ZOOMOUT_VALUE);
+                    }
+                } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_R1) {
+                    mZoom++;
+                    mView.zoomBy(ZOOMIN_VALUE);
+                } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_B) {
+                    beatkey = true;
+                    goBack();
+                } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_A) {
+                    View v = getCurrentFocus();
+                    if (v == mvBack) {
+                        goBack();
+                    } else if (v == mvVoice) {
+                        doVoiceSearch();
+                    } else if (v == mvRefresh) {
+                        loadPage();
+                    } else if (v == mvHelp) {
+                        showHelp();
+                    }
+                }
+            }
+        }
+
+        if (beatkey) {
+            return true;
+        }
+
+        return super.dispatchKeyEvent(event);
+    }
+
+    //handle controller
+    @Override
+    public boolean dispatchGenericMotionEvent(MotionEvent event) {
+        if (event != null) {
+            if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                float x = event.getAxisValue(MotionEvent.AXIS_X);
+                float y = event.getAxisValue(MotionEvent.AXIS_Y);
+
+                int scale = PAN_SCALE_FACTOR;
+
+                int px = (int) (x * scale);
+                int py = (int) (y * scale);
+
+                if ((px != 0) || (py != 0)) {
+                    mView.scrollBy(px, py);
+                }
+            }
+        }
+
+        return super.dispatchGenericMotionEvent(event);
+    }
+
+
+    public void goBack() {
+        mbDontUpdate = true;
+        this.mView.goBack();
+        mEdit.setText(mView.getUrl());
+    }
+
+    public void doVoiceSearch() {
+        //get the voice feedback
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "en-US");
+
+        try {
+            startActivityForResult(intent, RESULT_SPEECH);
+            mEdit.setText("");
+        } catch (ActivityNotFoundException a) {
+            Toast t = Toast.makeText(getApplicationContext(), "Oops - no voice to text service", Toast.LENGTH_LONG);
+            t.show();
+        }
+
+        //intent call back will handle rest...
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        //get the voice search data back
+        switch (requestCode) {
+            case RESULT_SPEECH: {
+                if (resultCode == RESULT_OK && null != data) {
+                    ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+
+                    mEdit.setText(text.get(0));
+                    loadPage();
+                }
+                break;
+            }
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.back: {
+                goBack();
+                break;
+            }
+            case R.id.voice: {
+                doVoiceSearch();;
+                break;
+            }
+            case R.id.refresh: {
+                loadPage();
+                break;
+            }
+            case R.id.help: {
+                showHelp();
+                break;
+            }
+        }
+    }
+
+    //Throw up dialog here
+    private void showHelp() {
+
+        String title = getApplicationContext().getResources().getString(R.string.help_title);
+        String msg = getApplicationContext().getResources().getString(R.string.help_msg);
+
+
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(msg)
+                .setNeutralButton("Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // continue
+                    }
+                }).show();
+    }
+
+    //private class to force links to load in this webview
+    private class MyWebViewClient extends WebViewClient {
+
+        //want to keep user in this browser instance (and not fire intent for a general system browser)
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView webView, String url) {
+            return false;
+        }
+
+        //when you click page to page, want address bar to show new address
+        @Override
+        public void onPageFinished(WebView view, String url) {
+            super.onPageFinished(view, url);
+
+            //update url text
+            if (!mbDontUpdate) {
+                mEdit.setText(url);
+            } else {
+                mbDontUpdate = false;
+            }
+        }
+    }
+}

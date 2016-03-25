@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Sample Browser</string>
+    <string name="help_title">Sample Browser Help</string>
+    <string name="help_msg">Controller shortcuts:\nNV=voice entry\nY=focus to top\nB=back\nLeft shoulder=zoomout\nRight shoulder=zoomin\nLeft stick=scroll\nRight stick=rsmouse\nNo caching, optimizations, etc\naddress entry rules:if we think it is a valid URL, load URL. Else kick off google search with those terms</string>
+</resources>
