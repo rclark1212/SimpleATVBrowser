@@ -33,6 +33,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -124,9 +125,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mView.setOnScrollChangeListener(new WebView.OnScrollChangeListener() {
             @Override
             public void onScrollChange(View v, int nx, int ny, int ox, int oy) {
-                if (ny > 0) {
+                if (ny > 200) { //ut in a bit of a threshold...
                     showSearchBar(false);
-                } else {
+                } else if (ny == 0) {
                     showSearchBar(true);
                 }
             }
