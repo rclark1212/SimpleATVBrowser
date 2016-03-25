@@ -38,6 +38,7 @@ import java.util.ArrayList;
 
 public class MainActivity extends Activity implements View.OnClickListener {
 
+    //Keep a copy of the views
     private WebView mView;
     private EditText mEdit;
     private View mvBack;
@@ -45,16 +46,20 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private View mvRefresh;
     private View mvHelp;
 
-    private int mZoom = 0;
-    private final static float ZOOMIN_VALUE = 1.5f;
-    private final static float ZOOMOUT_VALUE = 0.66666667f;
-    private final static int PAN_SCALE_FACTOR = 70;
-    //The UA string to convince websites we are a desktop browser...
+    private int mZoom = 0;      //used to track zoom status
+    private final static float ZOOMIN_VALUE = 1.5f;             //change this constant to change the zoom step
+    private final static float ZOOMOUT_VALUE = 1/ZOOMIN_VALUE;
+    private final static int PAN_SCALE_FACTOR = 50;             //change this constant to change the pan speed
+
+    //The UA string to convince websites we are a desktop browser...(finding it does not really work though). FIXME
     private final static String UA_DESKTOP = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/20100101 Firefox/4.0";
 
-    private boolean mbDontUpdate = false;
+    //Prefix term for a google search
+    private final static String GOOGLE_SEARCH = "http://www.google.com/#q=";
 
-    protected static final int RESULT_SPEECH = 1;
+    private boolean mbDontUpdate = false;                       //used to flag if we should update edit box URL with loaded URL
+
+    protected static final int RESULT_SPEECH = 1;               //ordinal for our intent response
 
 
     @Override
@@ -74,28 +79,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mvRefresh = findViewById(R.id.refresh);
         mvHelp = findViewById(R.id.help);
 
-        //Handle cookies here...
-        android.webkit.CookieManager.getInstance().setAcceptCookie(true);
-
-        //Enable javascript
-        WebSettings webSettings = mView.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-
-        //Set up to support zoom...
-        webSettings.setSupportZoom(true);
-
-        //try to set the desktop mode for web page load...
-        webSettings.setLoadWithOverviewMode(true);
-        webSettings.setUseWideViewPort(true);
-
-        //Do we need below?
-        //webSettings.setBuiltInZoomControls(true);
-        //webSettings.setDisplayZoomControls(false);
-
-        webSettings.setUserAgentString(UA_DESKTOP);
-
-        //Set webview to our overriden class...
-        mView.setWebViewClient(new MyWebViewClient());
+        //initialize the web view
+        initWebView();
 
         //set the initial edittext...
         mEdit.setText("www.google.com");
@@ -115,6 +100,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if ( (actionId == EditorInfo.IME_ACTION_DONE) || ((event.getKeyCode() == KeyEvent.KEYCODE_ENTER) && (event.getAction() == KeyEvent.ACTION_DOWN ))){
+                    //We got a done or enter. Go ahead and clean up the text box and load page...
                     cleanUpEdit();
                     loadPage();
                     return true;
@@ -126,11 +112,48 @@ public class MainActivity extends Activity implements View.OnClickListener {
         });
     }
 
+    /*
+        This routine initializes the webview we use.
+     */
+    private void initWebView() {
+
+        //Handle cookies here...
+        //WARNING - this has security implications. We just globally enable cookies. Sites can read other sites cookies afaik
+        android.webkit.CookieManager.getInstance().setAcceptCookie(true);
+
+        //Enable javascript
+        WebSettings webSettings = mView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+
+        //Set up to support zoom...
+        webSettings.setSupportZoom(true);
+
+        //try to set the desktop mode for web page load...
+        webSettings.setLoadWithOverviewMode(true);
+        webSettings.setUseWideViewPort(true);
+
+        //Don't use the zoom controls for ATV
+        //webSettings.setBuiltInZoomControls(true);
+        //webSettings.setDisplayZoomControls(false);
+
+        //Set UA string to try to get desktop sites (again, doesn't really work). FIXME
+        webSettings.setUserAgentString(UA_DESKTOP);
+
+        //Set webview to our overriden class...
+        mView.setWebViewClient(new MyWebViewClient());
+    }
+
+    /*
+        Loads a web page from the URL/text that is in the edit box
+     */
     private void loadPage() {
+        //Get the edit box text
         String url = mEdit.getText().toString();
 
         String http = url;
 
+        //Does it have a valid prefix? (note, this is assumptive code that http:// is in right spot)
+        //if not, add it.
         if (!http.contains("http://")) {
             http = "http://" + url;
         }
@@ -138,16 +161,21 @@ public class MainActivity extends Activity implements View.OnClickListener {
         //note - hide keyboard if showing...
         hideKeyboard();
 
+        //Now is this a valid http url?
         if (isValidUrl(http)) {
+            //if so, go ahead and load (and don't bother setting the edit text url with the full address)
             mbDontUpdate = true;
             mView.loadUrl(http);
         } else {
-            //do a google search
-            http = "http://www.google.com/#q=" + url;
+            //do a google search with the terms typed into the edit box...
+            http = GOOGLE_SEARCH + url;
             mView.loadUrl(http);
         }
     }
 
+    /*
+        Hides on screen keyboard if showing
+     */
     private void hideKeyboard() {
         View view = this.getCurrentFocus();
         if (view != null) {
@@ -156,9 +184,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
-    //android keyboards have a really irritating habit of inserting spaces after period. This is not due to edit
-    //text control. This is a keyboard issue. So fix this here. (look to see if you have a web address and remove space).
-    //2 . = web address
+    /*
+        Remove spaces after periods for text strings that have 2 . in them.
+        Android keyboards have a really irritating habit of inserting spaces after period. This is not due to edit
+        text control. This is a keyboard issue. So fix this here. (look to see if you have a web address and remove space).
+        2 . = web address
+     */
     private void cleanUpEdit() {
         String input = mEdit.getText().toString();
         String web = "";
@@ -181,22 +212,29 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
 
+    /*
+        Check if this is a valid URL.
+     */
     private boolean isValidUrl(String url) {
 
         return Patterns.WEB_URL.matcher(url).matches();
     }
 
 
-    //Handle a few special keys
+    /*
+        Handle the controller shortcuts for the buttons
+        Essentially our input handler
+        See the help file for controller button mappings...
+     */
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        boolean beatkey = false;
+        boolean bEatKey = false;    //some keys need to be eaten (voice search, back button)
         if (event != null) {
             if (event.getAction() == KeyEvent.ACTION_DOWN) {
                 if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_Y) {
                     mvHelp.requestFocus();
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_SEARCH) {
-                    beatkey = true;
+                    bEatKey = true;
                     doVoiceSearch();
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_L1) {
                     if (mZoom > 0) {
@@ -207,9 +245,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     mZoom++;
                     mView.zoomBy(ZOOMIN_VALUE);
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_B) {
-                    beatkey = true;
+                    bEatKey = true;
                     goBack();
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_A) {
+                    //Ugg - ImageButtons not invoking onClick on ATV. No idea why at this point.
+                    //So hack it up by actually processing in displatchKeyEvent. Ugg. Ugg. FIXME.
                     View v = getCurrentFocus();
                     if (v == mvBack) {
                         goBack();
@@ -224,26 +264,32 @@ public class MainActivity extends Activity implements View.OnClickListener {
             }
         }
 
-        if (beatkey) {
+        //If we want to eat the key, return true here...
+        if (bEatKey) {
             return true;
         }
 
         return super.dispatchKeyEvent(event);
     }
 
-    //handle controller
+    /*
+        Handle left stick controller move events for panning here
+     */
     @Override
     public boolean dispatchGenericMotionEvent(MotionEvent event) {
         if (event != null) {
+            //Check that this is a move action (rather than hover which the RS mouse sends)
             if (event.getAction() == MotionEvent.ACTION_MOVE) {
                 float x = event.getAxisValue(MotionEvent.AXIS_X);
                 float y = event.getAxisValue(MotionEvent.AXIS_Y);
 
+                //scale up the events...
                 int scale = PAN_SCALE_FACTOR;
 
                 int px = (int) (x * scale);
                 int py = (int) (y * scale);
 
+                //if we have movement, move...
                 if ((px != 0) || (py != 0)) {
                     mView.scrollBy(px, py);
                 }
@@ -254,19 +300,28 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
 
+    /*
+        Go back a web page
+     */
     public void goBack() {
         mbDontUpdate = true;
         this.mView.goBack();
         mEdit.setText(mView.getUrl());
     }
 
+    /*
+        Do a voice search entry for a web site (or for search)
+        Use the standard android intent service for this. This routine kicks off the intent.
+     */
     public void doVoiceSearch() {
-        //get the voice feedback
+        //set up the intent
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "en-US");
 
+        //and kick it off
         try {
             startActivityForResult(intent, RESULT_SPEECH);
+            //and if intent exists, clear out text box
             mEdit.setText("");
         } catch (ActivityNotFoundException a) {
             Toast t = Toast.makeText(getApplicationContext(), "Oops - no voice to text service", Toast.LENGTH_LONG);
@@ -276,16 +331,20 @@ public class MainActivity extends Activity implements View.OnClickListener {
         //intent call back will handle rest...
     }
 
+    /*
+        Intent callback service (used for voice search)
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        //get the voice search data back
+        //get the voice search data back - this is only intent we are interested in...
         switch (requestCode) {
             case RESULT_SPEECH: {
                 if (resultCode == RESULT_OK && null != data) {
                     ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 
+                    //We got something. Go ahead and set the edit box and load the page.
                     mEdit.setText(text.get(0));
                     loadPage();
                 }
@@ -304,6 +363,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
         return super.onOptionsItemSelected(item);
     }
 
+    /*
+        Handle the onClick.
+        Ugg - for some reason, imagebuttons are not being recognized as clicks on ATV. So this routine
+        never called. Handle it in the dispatch routine instead. And FIXME.
+     */
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -326,7 +390,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
-    //Throw up dialog here
+
+    /*
+        Throw up simple help dialog here
+     */
     private void showHelp() {
 
         String title = getApplicationContext().getResources().getString(R.string.help_title);
@@ -343,7 +410,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 }).show();
     }
 
-    //private class to force links to load in this webview
+    /*
+        Private webview class.
+        We only override a couple methods.
+        (1) shouldOverrideUrlLoading to keep user in this browser when clicking hyperlink (rather than triggering intent for system browser)
+        (2) onPageFinished so we can update the url edit text box with the new url if the user clicks a hyperlink
+     */
     private class MyWebViewClient extends WebViewClient {
 
         //want to keep user in this browser instance (and not fire intent for a general system browser)

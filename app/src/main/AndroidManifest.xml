@@ -3,6 +3,7 @@
 
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- this clever little permission lets us use the right stick as a mouse on nvidia shield -->
     <uses-permission android:name="nvidia.atv.rs_mouse" />
 
     <application

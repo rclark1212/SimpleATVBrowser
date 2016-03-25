@@ -16,7 +16,7 @@
 
         <RelativeLayout
             android:id="@+id/searchbar"
-            android:background="#76b900"
+            android:background="@color/primary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
