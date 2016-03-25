@@ -7,6 +7,8 @@ package com.example.rclark.simpleatvbrowser;
 
  */
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
@@ -16,12 +18,15 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.text.InputType;
+import android.util.AttributeSet;
 import android.util.Patterns;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebSettings;
@@ -46,10 +51,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private View mvRefresh;
     private View mvHelp;
 
+    private View mvControls;
+
     private int mZoom = 0;      //used to track zoom status
     private final static float ZOOMIN_VALUE = 1.5f;             //change this constant to change the zoom step
     private final static float ZOOMOUT_VALUE = 1/ZOOMIN_VALUE;
     private final static int PAN_SCALE_FACTOR = 50;             //change this constant to change the pan speed
+    private final static int ANIMTIME = 100;                    //100ms animations - speed is what we are after...
 
     //The UA string to convince websites we are a desktop browser...(finding it does not really work though). FIXME
     private final static String UA_DESKTOP = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/20100101 Firefox/4.0";
@@ -79,6 +87,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mvRefresh = findViewById(R.id.refresh);
         mvHelp = findViewById(R.id.help);
 
+        mvControls = findViewById(R.id.searchbar);
+
         //initialize the web view
         initWebView();
 
@@ -99,14 +109,25 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if ( (actionId == EditorInfo.IME_ACTION_DONE) || ((event.getKeyCode() == KeyEvent.KEYCODE_ENTER) && (event.getAction() == KeyEvent.ACTION_DOWN ))){
+                if ((actionId == EditorInfo.IME_ACTION_DONE) || ((event.getKeyCode() == KeyEvent.KEYCODE_ENTER) && (event.getAction() == KeyEvent.ACTION_DOWN))) {
                     //We got a done or enter. Go ahead and clean up the text box and load page...
                     cleanUpEdit();
                     loadPage();
                     return true;
-                }
-                else{
+                } else {
                     return false;
+                }
+            }
+        });
+
+        //process scroll events to show/hide searchbar
+        mView.setOnScrollChangeListener(new WebView.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(View v, int nx, int ny, int ox, int oy) {
+                if (ny > 0) {
+                    showSearchBar(false);
+                } else {
+                    showSearchBar(true);
                 }
             }
         });
@@ -141,6 +162,49 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         //Set webview to our overriden class...
         mView.setWebViewClient(new MyWebViewClient());
+    }
+
+    /*
+        Shows or hides the searchbar
+        (probably should just subclass layout and override set visibility method but lazy...)
+        Note that animation not coordinated. FIXME.
+     */
+    private void showSearchBar(boolean show) {
+
+        if (show) {
+            if (mvControls.getVisibility() != View.VISIBLE) {
+                mvControls.setVisibility(View.VISIBLE);
+            }
+        } else {
+            if (mvControls.getVisibility() == View.VISIBLE) {
+                mvControls.setVisibility(View.GONE);
+            }
+        }
+
+        /* FIX animation below...
+        if (show) {
+            if (mvControls.getVisibility() != View.VISIBLE) {
+                mvControls.animate().setDuration(ANIMTIME);
+                //mView.animate().translationYBy(mvControls.getHeight());
+                mvControls.animate().translationYBy(mvControls.getHeight()).withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        mvControls.setVisibility(View.VISIBLE);
+                    }
+                });
+            }
+        } else {
+            if (mvControls.getVisibility() == View.VISIBLE) {
+                mvControls.animate().setDuration(ANIMTIME);
+                //mView.animate().translationYBy(-mvControls.getHeight());
+                mvControls.animate().translationYBy(-mvControls.getHeight()).withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        mvControls.setVisibility(View.GONE);
+                    }
+                });
+            }
+        } */
     }
 
     /*
@@ -232,6 +296,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (event != null) {
             if (event.getAction() == KeyEvent.ACTION_DOWN) {
                 if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_Y) {
+                    //always show search bar if we go to info button...
+                    showSearchBar(true);
                     mvHelp.requestFocus();
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_SEARCH) {
                     bEatKey = true;
