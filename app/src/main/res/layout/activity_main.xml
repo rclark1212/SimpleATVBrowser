@@ -51,6 +51,14 @@
                 style="@android:style/Widget.Material.Light.Button.Borderless"
                 android:src="@drawable/refresh"/>
 
+            <ImageButton
+                android:id="@+id/dropdown"
+                android:layout_width="@dimen/button_width"
+                android:layout_height="@dimen/button_height"
+                android:layout_toRightOf="@id/refresh"
+                style="@android:style/Widget.Material.Light.Button.Borderless"
+                android:src="@drawable/unfold"/>
+
             <EditText
                 android:id="@+id/search"
                 android:layout_width="match_parent"
@@ -59,7 +67,8 @@
                 android:singleLine="true"
                 android:lines="1"
                 android:inputType="text"
-                android:layout_toRightOf="@id/refresh" />
+                android:layout_toRightOf="@id/dropdown" />
+
 
         </RelativeLayout>
 

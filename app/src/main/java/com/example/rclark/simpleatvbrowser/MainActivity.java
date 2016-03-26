@@ -32,7 +32,11 @@ import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.ListPopupWindow;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,6 +45,7 @@ import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends Activity implements View.OnClickListener {
 
@@ -51,8 +56,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private View mvVoice;
     private View mvRefresh;
     private View mvHelp;
+    private View mvList;
 
     private View mvControls;
+
+    ListPopupWindow mlpw;        //popup window
+    List<String> m_urlist;
+    private final static int MAX_HISTORY = 10;
 
     private int mZoom = 0;      //used to track zoom status
     private final static float ZOOMIN_VALUE = 1.5f;             //change this constant to change the zoom step
@@ -70,7 +80,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     protected static final int RESULT_SPEECH = 1;               //ordinal for our intent response
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,8 +96,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mvVoice = findViewById(R.id.voice);
         mvRefresh = findViewById(R.id.refresh);
         mvHelp = findViewById(R.id.help);
+        mvList = findViewById(R.id.dropdown);
 
         mvControls = findViewById(R.id.searchbar);
+
+        //init the history list...
+        m_urlist = new ArrayList<String>();
 
         //initialize the web view
         initWebView();
@@ -231,6 +244,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
             //if so, go ahead and load (and don't bother setting the edit text url with the full address)
             mbDontUpdate = true;
             mView.loadUrl(http);
+            //add this url to the list
+            addToList(url);
         } else {
             //do a google search with the terms typed into the edit box...
             http = GOOGLE_SEARCH + url;
@@ -326,6 +341,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         loadPage();
                     } else if (v == mvHelp) {
                         showHelp();
+                    } else if (v == mvList) {
+                        popupList();
                     }
                 }
             }
@@ -454,9 +471,68 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 showHelp();
                 break;
             }
+            case R.id.dropdown: {
+                popupList();
+                break;
+            }
         }
     }
 
+    /*
+        Pop up list of last web sites visited
+     */
+    private void popupList() {
+
+        //is there anything in the list?
+        if (m_urlist.size() > 0) {
+
+            String[] list = new String[m_urlist.size()];
+            list = m_urlist.toArray(list);
+
+            //create the window
+            mlpw = new ListPopupWindow(this);
+
+            mlpw.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, list));
+            mlpw.setAnchorView(mEdit);
+            mlpw.setModal(true);
+            mlpw.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    String item = m_urlist.get(position);
+                    //set the edit text and load the page (and dismiss)
+                    mEdit.setText(item);
+                    loadPage();
+                    mlpw.dismiss();
+                }
+            });
+
+            mlpw.show();
+        }
+    }
+
+
+    /*
+        Adds an url to our list...
+     */
+    private void addToList(String url) {
+        //first, does this url exist in the list?
+        if (!m_urlist.contains(url)) {
+            //not there. add it...
+            m_urlist.add(0, url);
+        } else {
+            //if it is there, move it to top of list...
+            int index = m_urlist.indexOf(url);
+            if (index > 0) {
+                m_urlist.remove(index);
+                m_urlist.add(0, url);
+            }
+        }
+
+        //and throw out those that exceed history
+        if (m_urlist.size() > MAX_HISTORY) {
+            m_urlist.remove(MAX_HISTORY);
+        }
+    }
 
     /*
         Throw up simple help dialog here
