@@ -15,7 +15,9 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.text.InputType;
 import android.util.AttributeSet;
@@ -45,7 +47,9 @@ import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class MainActivity extends Activity implements View.OnClickListener {
 
@@ -69,6 +73,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private final static float ZOOMOUT_VALUE = 1/ZOOMIN_VALUE;
     private final static int PAN_SCALE_FACTOR = 50;             //change this constant to change the pan speed
     private final static int ANIMTIME = 100;                    //100ms animations - speed is what we are after...
+
+    //Preference key for history
+    private final static String HISTORY_LIST = "history_list";
 
     //The UA string to convince websites we are a desktop browser...(finding it does not really work though). FIXME
     private final static String UA_DESKTOP = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/20100101 Firefox/4.0";
@@ -243,9 +250,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (isValidUrl(http)) {
             //if so, go ahead and load (and don't bother setting the edit text url with the full address)
             mbDontUpdate = true;
-            mView.loadUrl(http);
             //add this url to the list
             addToList(url);
+            mView.loadUrl(http);
         } else {
             //do a google search with the terms typed into the edit box...
             http = GOOGLE_SEARCH + url;
@@ -433,6 +440,55 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     loadPage();
                 }
                 break;
+            }
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        //save any history
+        saveHistory();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //load any saved history
+        loadHistory();
+    }
+
+    /*
+        Save history to preferences
+     */
+    private void saveHistory() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        Set<String> history = new HashSet<String>();
+
+        for (int i = 0; i < m_urlist.size(); i++) {
+            history.add(m_urlist.get(i));
+        }
+
+        SharedPreferences.Editor edit = pref.edit();
+        edit.putStringSet(HISTORY_LIST, history);
+        edit.commit();
+
+    }
+
+    /*
+        Load history from preferences
+     */
+    private void loadHistory() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        Set<String> history = pref.getStringSet(HISTORY_LIST, null);
+
+        if (history != null) {
+            //clear history first...
+            m_urlist.clear();
+
+            //and recover...
+            for (String value: history) {
+                m_urlist.add(value);
             }
         }
     }
