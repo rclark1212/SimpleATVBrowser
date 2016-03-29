@@ -180,7 +180,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         //Set defalts for caching...
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        
+
         //Set UA string to try to get desktop sites (again, doesn't really work). FIXME
         webSettings.setUserAgentString(UA_DESKTOP);
 
