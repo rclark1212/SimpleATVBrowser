@@ -49,6 +49,7 @@ import java.net.CookiePolicy;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 public class MainActivity extends Activity implements View.OnClickListener {
@@ -410,7 +411,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public void doVoiceSearch() {
         //set up the intent
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "en-US");
+        //intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "en-US");
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, Locale.getDefault());
 
         //and kick it off
         try {
