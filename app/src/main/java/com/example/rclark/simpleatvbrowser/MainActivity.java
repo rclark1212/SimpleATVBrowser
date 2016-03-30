@@ -65,6 +65,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private View mvControls;
 
     ListPopupWindow mlpw;        //popup window
+
     List<String> m_urlist;
     private final static int MAX_HISTORY = 10;
 
@@ -551,6 +552,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             //create the window
             mlpw = new ListPopupWindow(this);
 
+            //FIXME - use a custom layout that we override to get keyevents...
             mlpw.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, list));
             mlpw.setAnchorView(mEdit);
             mlpw.setModal(true);
