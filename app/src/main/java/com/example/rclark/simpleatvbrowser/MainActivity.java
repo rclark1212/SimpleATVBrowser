@@ -52,16 +52,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-public class MainActivity extends Activity implements View.OnClickListener {
-
-    //Keep a copy of the views
-    private WebView mView;
-    private EditText mEdit;
-    private View mvBack;
-    private View mvVoice;
-    private View mvRefresh;
-    private View mvHelp;
-    private View mvList;
+public class MainActivity extends Activity implements
+        View.OnClickListener, SearchbarFragment.OnMainActivytCallbackListener, WebviewFragment.OnMainActivytCallbackListener {
 
     private View mvControls;
 
@@ -69,6 +61,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     List<String> m_urlist;
     private final static int MAX_HISTORY = 10;
+    //Preference key for history
+    private final static String HISTORY_LIST = "history_list";
+
+    //Fragments...
+    SearchbarFragment mSearchFragment;
+    WebviewFragment mWebFragment;
 
     private int mZoom = 0;      //used to track zoom status
     private final static float ZOOMIN_VALUE = 1.5f;             //change this constant to change the zoom step
@@ -76,119 +74,63 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private final static int PAN_SCALE_FACTOR = 50;             //change this constant to change the pan speed
     private final static int ANIMTIME = 100;                    //100ms animations - speed is what we are after...
 
-    //Preference key for history
-    private final static String HISTORY_LIST = "history_list";
-
-    //The UA string to convince websites we are a desktop browser...(finding it does not really work though). FIXME
-    private final static String UA_DESKTOP = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/20100101 Firefox/4.0";
-
     //Prefix term for a google search
     private final static String GOOGLE_SEARCH = "http://www.google.com/#q=";
 
-    private boolean mbDontUpdate = false;                       //used to flag if we should update edit box URL with loaded URL
-
+    //Some ordinal defines...
     protected static final int RESULT_SPEECH = 1;               //ordinal for our intent response
+    protected static final int CALLBACK_LOAD_PAGE = 0;
+    protected static final int CALLBACK_HIDE_BAR = 1;
+    protected static final int CALLBACK_SHOW_BAR = 2;
+    protected static final int CALLBACK_UPDATE_URL = 3;
+    protected static final int CALLBACK_HIDE_KEYBOARD = 4;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Get views
-        mView = (WebView) findViewById(R.id.webview);
-        mEdit = (EditText) findViewById(R.id.search);
-
-        //Okay - some weirdness happening in button processing. Not getting onClick
-        //events for imagebuttons. No idea why. Hack it up by looking for button A matching the view
-        //and dispatch directly for now.
-        mvBack = findViewById(R.id.back);
-        mvVoice = findViewById(R.id.voice);
-        mvRefresh = findViewById(R.id.refresh);
-        mvHelp = findViewById(R.id.help);
-        mvList = findViewById(R.id.dropdown);
-
-        mvControls = findViewById(R.id.searchbar);
-
         //init the history list...
         m_urlist = new ArrayList<String>();
 
-        //initialize the web view
-        initWebView();
+        //get a view to searchbar
+        mvControls = findViewById(R.id.searchbar_fragment);
 
+        //Get the fragments...
+        mSearchFragment = (SearchbarFragment) getFragmentManager().findFragmentById(R.id.searchbar_fragment);
+        mWebFragment = (WebviewFragment) getFragmentManager().findFragmentById(R.id.webview_fragment);
+
+        //and set up final initialization
         //set the initial edittext...
-        mEdit.setText("www.google.com");
+        mSearchFragment.updateEditBox("www.google.com");
 
         //and load initial webview
         loadPage();
 
         //set focus to voice input
-        mvVoice.requestFocus();
+        mSearchFragment.setFocus(SearchbarFragment.VOICE_VIEW);
 
         //hide keyboard
         hideKeyboard();
 
-
-        //process edittext
-        mEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if ((actionId == EditorInfo.IME_ACTION_DONE) || ((event.getKeyCode() == KeyEvent.KEYCODE_ENTER) && (event.getAction() == KeyEvent.ACTION_DOWN))) {
-                    //We got a done or enter. Go ahead and clean up the text box and load page...
-                    cleanUpEdit();
-                    loadPage();
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        });
-
-        //process scroll events to show/hide searchbar
-        mView.setOnScrollChangeListener(new WebView.OnScrollChangeListener() {
-            @Override
-            public void onScrollChange(View v, int nx, int ny, int ox, int oy) {
-                if (ny > 200) { //ut in a bit of a threshold...
-                    showSearchBar(false);
-                } else if (ny == 0) {
-                    showSearchBar(true);
-                }
-            }
-        });
     }
 
-    /*
-        This routine initializes the webview we use.
-     */
-    private void initWebView() {
-
-        //Handle cookies here...
-        //WARNING - this has security implications. We just globally enable cookies. Sites can read other sites cookies afaik
-        android.webkit.CookieManager.getInstance().setAcceptCookie(true);
-
-        //Enable javascript
-        WebSettings webSettings = mView.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-
-        //Set up to support zoom...
-        webSettings.setSupportZoom(true);
-
-        //try to set the desktop mode for web page load...
-        webSettings.setLoadWithOverviewMode(true);
-        webSettings.setUseWideViewPort(true);
-
-        //Don't use the zoom controls for ATV
-        //webSettings.setBuiltInZoomControls(true);
-        //webSettings.setDisplayZoomControls(false);
-
-        //Set defalts for caching...
-        webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
-
-        //Set UA string to try to get desktop sites (again, doesn't really work). FIXME
-        webSettings.setUserAgentString(UA_DESKTOP);
-
-        //Set webview to our overriden class...
-        mView.setWebViewClient(new MyWebViewClient());
+    //Routine called by search bar fragment to request a page load
+    public void onMainActivityCallback(int code) {
+        //make this more generic. may need to do several things...
+        if (code == CALLBACK_LOAD_PAGE) {
+            loadPage();
+        } else if (code == CALLBACK_HIDE_BAR) {
+            showSearchBar(false);
+        } else if (code == CALLBACK_SHOW_BAR) {
+            showSearchBar(true);
+        } else if (code == CALLBACK_UPDATE_URL) {
+            mSearchFragment.updateEditBox(mWebFragment.getURL());
+        } else if (code == CALLBACK_HIDE_KEYBOARD) {
+            hideKeyboard();
+        }
     }
+
 
     /*
         Shows or hides the searchbar
@@ -238,8 +180,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
      */
     private void loadPage() {
         //Get the edit box text
-        String url = mEdit.getText().toString();
-
+        String url = mSearchFragment.getEditBox();
         String http = url;
 
         //Does it have a valid prefix? (note, this is assumptive code that http:// is in right spot)
@@ -253,15 +194,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         //Now is this a valid http url?
         if (isValidUrl(http)) {
-            //if so, go ahead and load (and don't bother setting the edit text url with the full address)
-            mbDontUpdate = true;
             //add this url to the list
             addToList(url);
-            mView.loadUrl(http);
+            //if so, go ahead and load (and don't bother setting the edit text url with the full address)
+            mWebFragment.loadURL(http, true);
         } else {
             //do a google search with the terms typed into the edit box...
             http = GOOGLE_SEARCH + url;
-            mView.loadUrl(http);
+            mWebFragment.loadURL(http, false);
         }
     }
 
@@ -271,44 +211,15 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private void hideKeyboard() {
         View view = this.getCurrentFocus();
         if (view != null) {
-            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
 
     /*
-        Remove spaces after periods for text strings that have 2 . in them.
-        Android keyboards have a really irritating habit of inserting spaces after period. This is not due to edit
-        text control. This is a keyboard issue. So fix this here. (look to see if you have a web address and remove space).
-        2 . = web address
-     */
-    private void cleanUpEdit() {
-        String input = mEdit.getText().toString();
-        String web = "";
-        int count = 0;
-
-        for (int i = 0; i < input.length(); i++) {
-            if (input.substring(i,i+1).equals(".")) {
-                count++;
-            }
-
-            if (!input.substring(i,i+1).equals(" ")) {
-                web = web + input.substring(i,i+1);
-            }
-        }
-
-        if (count == 2) {
-            mEdit.setText(web);
-        }
-
-    }
-
-
-    /*
         Check if this is a valid URL.
      */
     private boolean isValidUrl(String url) {
-
         return Patterns.WEB_URL.matcher(url).matches();
     }
 
@@ -326,18 +237,18 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_Y) {
                     //always show search bar if we go to info button...
                     showSearchBar(true);
-                    mvHelp.requestFocus();
+                    mSearchFragment.mvHelp.requestFocus();
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_SEARCH) {
                     bEatKey = true;
                     doVoiceSearch();
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_L1) {
                     if (mZoom > 0) {
                         mZoom--;
-                        mView.zoomBy(ZOOMOUT_VALUE);
+                        mWebFragment.setZoom(ZOOMOUT_VALUE);
                     }
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_R1) {
                     mZoom++;
-                    mView.zoomBy(ZOOMIN_VALUE);
+                    mWebFragment.setZoom(ZOOMIN_VALUE);
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_B) {
                     bEatKey = true;
                     goBack();
@@ -345,15 +256,15 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     //Ugg - ImageButtons not invoking onClick on ATV. No idea why at this point.
                     //So hack it up by actually processing in displatchKeyEvent. Ugg. Ugg. FIXME.
                     View v = getCurrentFocus();
-                    if (v == mvBack) {
+                    if (v == mSearchFragment.mvBack) {
                         goBack();
-                    } else if (v == mvVoice) {
+                    } else if (v == mSearchFragment.mvVoice) {
                         doVoiceSearch();
-                    } else if (v == mvRefresh) {
+                    } else if (v == mSearchFragment.mvRefresh) {
                         loadPage();
-                    } else if (v == mvHelp) {
+                    } else if (v == mSearchFragment.mvHelp) {
                         showHelp();
-                    } else if (v == mvList) {
+                    } else if (v == mSearchFragment.mvList) {
                         popupList();
                     }
                 }
@@ -387,7 +298,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
                 //if we have movement, move...
                 if ((px != 0) || (py != 0)) {
-                    mView.scrollBy(px, py);
+                    mWebFragment.setScroll(px, py);
                 }
             }
         }
@@ -400,9 +311,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         Go back a web page
      */
     public void goBack() {
-        mbDontUpdate = true;
-        this.mView.goBack();
-        mEdit.setText(mView.getUrl());
+        mWebFragment.goBackWeb();
     }
 
     /*
@@ -419,7 +328,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         try {
             startActivityForResult(intent, RESULT_SPEECH);
             //and if intent exists, clear out text box
-            mEdit.setText("");
+            mSearchFragment.updateEditBox("");
         } catch (ActivityNotFoundException a) {
             Toast t = Toast.makeText(getApplicationContext(), "Oops - no voice to text service", Toast.LENGTH_LONG);
             t.show();
@@ -442,7 +351,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 
                     //We got something. Go ahead and set the edit box and load the page.
-                    mEdit.setText(text.get(0));
+                    mSearchFragment.updateEditBox(text.get(0));
                     loadPage();
                 }
                 break;
@@ -556,14 +465,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
             //FIXME - use a custom layout that we override to get keyevents...
             mlpw.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, list));
-            mlpw.setAnchorView(mEdit);
+            mlpw.setAnchorView(mSearchFragment.mEdit);
             mlpw.setModal(true);
             mlpw.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     String item = m_urlist.get(position);
                     //set the edit text and load the page (and dismiss)
-                    mEdit.setText(item);
+                    mSearchFragment.updateEditBox(item);
                     loadPage();
                     mlpw.dismiss();
                 }
@@ -616,31 +525,4 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 }).show();
     }
 
-    /*
-        Private webview class.
-        We only override a couple methods.
-        (1) shouldOverrideUrlLoading to keep user in this browser when clicking hyperlink (rather than triggering intent for system browser)
-        (2) onPageFinished so we can update the url edit text box with the new url if the user clicks a hyperlink
-     */
-    private class MyWebViewClient extends WebViewClient {
-
-        //want to keep user in this browser instance (and not fire intent for a general system browser)
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView webView, String url) {
-            return false;
-        }
-
-        //when you click page to page, want address bar to show new address
-        @Override
-        public void onPageFinished(WebView view, String url) {
-            super.onPageFinished(view, url);
-
-            //update url text
-            if (!mbDontUpdate) {
-                mEdit.setText(url);
-            } else {
-                mbDontUpdate = false;
-            }
-        }
-    }
 }

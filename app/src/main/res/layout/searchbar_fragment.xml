@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:id="@+id/searchbar"
+    android:background="@color/primary"
+    android:layout_height="match_parent">
+    <ImageButton
+        android:id="@+id/help"
+        android:layout_width="@dimen/button_width"
+        android:layout_height="@dimen/button_height"
+        style="@android:style/Widget.Material.Light.Button.Borderless"
+        android:src="@drawable/help"/>
+
+    <ImageButton
+        android:id="@+id/back"
+        android:layout_width="@dimen/button_width"
+        android:layout_height="@dimen/button_height"
+        android:layout_toRightOf="@id/help"
+        style="@android:style/Widget.Material.Light.Button.Borderless"
+        android:src="@drawable/back"/>
+
+    <ImageButton
+        android:id="@+id/voice"
+        android:layout_width="@dimen/button_width"
+        android:layout_height="@dimen/button_height"
+        android:layout_toRightOf="@id/back"
+        style="@android:style/Widget.Material.Light.Button.Borderless"
+        android:src="@drawable/mic"/>
+
+    <ImageButton
+        android:id="@+id/refresh"
+        android:layout_width="@dimen/button_width"
+        android:layout_height="@dimen/button_height"
+        android:layout_toRightOf="@id/voice"
+        style="@android:style/Widget.Material.Light.Button.Borderless"
+        android:src="@drawable/refresh"/>
+
+    <ImageButton
+        android:id="@+id/dropdown"
+        android:layout_width="@dimen/button_width"
+        android:layout_height="@dimen/button_height"
+        android:layout_toRightOf="@id/refresh"
+        style="@android:style/Widget.Material.Light.Button.Borderless"
+        android:src="@drawable/unfold"/>
+
+    <EditText
+        android:id="@+id/search"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:imeOptions="actionDone"
+        android:singleLine="true"
+        android:lines="1"
+        android:inputType="text"
+        android:layout_toRightOf="@id/dropdown" />
+
+</RelativeLayout>
