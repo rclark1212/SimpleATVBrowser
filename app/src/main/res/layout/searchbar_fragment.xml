@@ -8,6 +8,7 @@
         android:id="@+id/help"
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
+        android:onClick="onClick"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/help"/>
 
@@ -15,6 +16,7 @@
         android:id="@+id/back"
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
+        android:onClick="onClick"
         android:layout_toRightOf="@id/help"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/back"/>
@@ -23,6 +25,7 @@
         android:id="@+id/voice"
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
+        android:onClick="onClick"
         android:layout_toRightOf="@id/back"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/mic"/>
@@ -31,6 +34,7 @@
         android:id="@+id/refresh"
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
+        android:onClick="onClick"
         android:layout_toRightOf="@id/voice"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/refresh"/>
@@ -39,6 +43,7 @@
         android:id="@+id/dropdown"
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
+        android:onClick="onClick"
         android:layout_toRightOf="@id/refresh"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/unfold"/>

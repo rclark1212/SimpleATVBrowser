@@ -53,7 +53,7 @@ import java.util.Locale;
 import java.util.Set;
 
 public class MainActivity extends Activity implements
-        View.OnClickListener, SearchbarFragment.OnMainActivytCallbackListener, WebviewFragment.OnMainActivytCallbackListener {
+        View.OnClickListener, SearchbarFragment.OnMainActivityCallbackListener, WebviewFragment.OnMainActivityCallbackListener {
 
     private View mvControls;
 
@@ -108,7 +108,7 @@ public class MainActivity extends Activity implements
         loadPage();
 
         //set focus to voice input
-        mSearchFragment.setFocus(SearchbarFragment.VOICE_VIEW);
+        mSearchFragment.mvVoice.requestFocus();
 
         //hide keyboard
         hideKeyboard();
@@ -142,6 +142,8 @@ public class MainActivity extends Activity implements
         if (show) {
             if (mvControls.getVisibility() != View.VISIBLE) {
                 mvControls.setVisibility(View.VISIBLE);
+                //and when you show searchbar (when it was invisible), put focus on help button
+                mSearchFragment.mvHelp.requestFocus();
             }
         } else {
             if (mvControls.getVisibility() == View.VISIBLE) {
@@ -235,6 +237,7 @@ public class MainActivity extends Activity implements
         if (event != null) {
             if (event.getAction() == KeyEvent.ACTION_DOWN) {
                 if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_Y) {
+                    mWebFragment.mWView.setScrollY(0);      //reset to top of page...
                     //always show search bar if we go to info button...
                     showSearchBar(true);
                     mSearchFragment.mvHelp.requestFocus();
@@ -252,21 +255,6 @@ public class MainActivity extends Activity implements
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_B) {
                     bEatKey = true;
                     goBack();
-                } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_A) {
-                    //Ugg - ImageButtons not invoking onClick on ATV. No idea why at this point.
-                    //So hack it up by actually processing in displatchKeyEvent. Ugg. Ugg. FIXME.
-                    View v = getCurrentFocus();
-                    if (v == mSearchFragment.mvBack) {
-                        goBack();
-                    } else if (v == mSearchFragment.mvVoice) {
-                        doVoiceSearch();
-                    } else if (v == mSearchFragment.mvRefresh) {
-                        loadPage();
-                    } else if (v == mSearchFragment.mvHelp) {
-                        showHelp();
-                    } else if (v == mSearchFragment.mvList) {
-                        popupList();
-                    }
                 }
             }
         }
@@ -419,9 +407,7 @@ public class MainActivity extends Activity implements
     }
 
     /*
-        Handle the onClick.
-        Ugg - for some reason, imagebuttons are not being recognized as clicks on ATV. So this routine
-        never called. Handle it in the dispatch routine instead. And FIXME.
+        Handle the onClick for searchbar buttons
      */
     @Override
     public void onClick(View v) {

@@ -2,6 +2,7 @@ package com.example.rclark.simpleatvbrowser;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -21,9 +22,6 @@ import java.util.List;
  */
 public class SearchbarFragment extends Fragment {
 
-    public final static int VOICE_VIEW = 0;
-    public final static int HELP_VIEW = 1;
-
     //Keep a copy of the views
     public EditText mEdit;
     public View mvBack;
@@ -32,14 +30,12 @@ public class SearchbarFragment extends Fragment {
     public View mvHelp;
     public View mvList;
 
-    OnMainActivytCallbackListener mCallback;
+    OnMainActivityCallbackListener mCallback;
     //Put in an interface for container activity to implement so that fragment can deliver messages
-    public interface OnMainActivytCallbackListener {
+    public interface OnMainActivityCallbackListener {
         //called by SearchbarFragment when a url is selected
         public void onMainActivityCallback(int code);
     }
-    //note - mCallback.onMainActivityCallback(code) to reflect back to activity
-    // String url = mEdit.getText().toString();
 
 
     @Override
@@ -49,49 +45,43 @@ public class SearchbarFragment extends Fragment {
         View retView = inflater.inflate(R.layout.searchbar_fragment, container, false);
 
         //Get views
-        if (retView != null) {    //FIXME
-            mEdit = (EditText) retView.findViewById(R.id.search);
+        mEdit = (EditText) retView.findViewById(R.id.search);
+        mvBack = retView.findViewById(R.id.back);
+        mvVoice = retView.findViewById(R.id.voice);
+        mvRefresh = retView.findViewById(R.id.refresh);
+        mvHelp = retView.findViewById(R.id.help);
+        mvList = retView.findViewById(R.id.dropdown);
 
-            //Okay - some weirdness happening in button processing. Not getting onClick
-            //events for imagebuttons. No idea why. Hack it up by looking for button A matching the view
-            //and dispatch directly for now.
-            mvBack = retView.findViewById(R.id.back);
-            mvVoice = retView.findViewById(R.id.voice);
-            mvRefresh = retView.findViewById(R.id.refresh);
-            mvHelp = retView.findViewById(R.id.help);
-            mvList = retView.findViewById(R.id.dropdown);
-
-            //process edittext
-            mEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-                @Override
-                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                    if ((actionId == EditorInfo.IME_ACTION_DONE) || ((event.getKeyCode() == KeyEvent.KEYCODE_ENTER) && (event.getAction() == KeyEvent.ACTION_DOWN))) {
-                        //We got a done or enter. Go ahead and clean up the text box and load page...
-                        cleanUpEdit();
-                        mCallback.onMainActivityCallback(MainActivity.CALLBACK_LOAD_PAGE);
-                        return true;
-                    } else {
-                        return false;
-                    }
+        //process edittext
+        mEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if ((actionId == EditorInfo.IME_ACTION_DONE) || ((event.getKeyCode() == KeyEvent.KEYCODE_ENTER) && (event.getAction() == KeyEvent.ACTION_DOWN))) {
+                    //We got a done or enter. Go ahead and clean up the text box and load page...
+                    cleanUpEdit();
+                    mCallback.onMainActivityCallback(MainActivity.CALLBACK_LOAD_PAGE);
+                    return true;
+                } else {
+                    return false;
                 }
-            });
-        }
+            }
+        });
 
         return retView;
     }
 
     @Override
-    public void onAttach(Activity activity) {   //FIXME
-        super.onAttach(activity);
+    public void onAttach(Context ctx) {
+        super.onAttach(ctx);
 
         // This makes sure that the container activity has implemented
         // the callback interface. If not, it throws an exception.
         // housekeeping function
         try {
-            mCallback = (OnMainActivytCallbackListener) activity;
+            mCallback = (OnMainActivityCallbackListener) ctx;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement OnMainActivytCallbackListener");
+            throw new ClassCastException(ctx.toString()
+                    + " must implement OnMainActivityCallbackListener");
         }
     }
 
@@ -134,17 +124,6 @@ public class SearchbarFragment extends Fragment {
     //
     public String getEditBox() {
         return mEdit.getText().toString();
-    }
-
-    //
-    //  Routine to change focus in searchbar
-    //
-    public void setFocus(int item) {
-        if (item == VOICE_VIEW) {
-            mvVoice.requestFocus();
-        } else if (item == HELP_VIEW) {
-            mvHelp.requestFocus();
-        }
     }
 
 }

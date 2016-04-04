@@ -2,6 +2,7 @@ package com.example.rclark.simpleatvbrowser;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,16 +16,18 @@ import android.webkit.WebViewClient;
  */
 public class WebviewFragment extends Fragment {
 
-    private WebView mWView;
+    private final static int HIDE_SEARCH_AT_YSCROLL = 200;
+
+    public WebView mWView;
     private boolean mbDontUpdate;
 
     //The UA string to convince websites we are a desktop browser...(finding it does not really work though). FIXME
     private final static String UA_DESKTOP = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/20100101 Firefox/4.0";
 
-    OnMainActivytCallbackListener mCallback;
+    OnMainActivityCallbackListener mCallback;
     //Put in an interface for container activity to implement so that fragment can deliver messages
-    public interface OnMainActivytCallbackListener {
-        //called by SearchbarFragment when a url is selected
+    public interface OnMainActivityCallbackListener {
+        //called by WebviewFragment when a url is selected
         public void onMainActivityCallback(int code);
     }
 
@@ -44,7 +47,7 @@ public class WebviewFragment extends Fragment {
             mWView.setOnScrollChangeListener(new WebView.OnScrollChangeListener() {
                 @Override
                 public void onScrollChange(View v, int nx, int ny, int ox, int oy) {
-                    if (ny > 200) { //ut in a bit of a threshold...
+                    if (ny > HIDE_SEARCH_AT_YSCROLL) { //put in a bit of a threshold...
                         mCallback.onMainActivityCallback(MainActivity.CALLBACK_HIDE_BAR);
                     } else if (ny == 0) {
                         mCallback.onMainActivityCallback(MainActivity.CALLBACK_SHOW_BAR);
@@ -60,17 +63,17 @@ public class WebviewFragment extends Fragment {
     //  Set the callback
     //
     @Override
-    public void onAttach(Activity activity) {   //FIXME
-        super.onAttach(activity);
+    public void onAttach(Context ctx) {
+        super.onAttach(ctx);
 
         // This makes sure that the container activity has implemented
         // the callback interface. If not, it throws an exception.
         // housekeeping function
         try {
-            mCallback = (OnMainActivytCallbackListener) activity;
+            mCallback = (OnMainActivityCallbackListener) ctx;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement OnMainActivytCallbackListener");
+            throw new ClassCastException(ctx.toString()
+                    + " must implement OnMainActivityCallbackListener");
         }
     }
 
