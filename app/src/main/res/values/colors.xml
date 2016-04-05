@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="primary">#76b900</color>
+    <color name="focused">#b6f900</color>
+    <color name="pressed">#368900</color>
 </resources>
