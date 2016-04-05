@@ -13,11 +13,29 @@
         android:src="@drawable/help"/>
 
     <ImageButton
-        android:id="@+id/back"
+        android:id="@+id/home"
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
         android:onClick="onClick"
         android:layout_toRightOf="@id/help"
+        style="@android:style/Widget.Material.Light.Button.Borderless"
+        android:src="@drawable/home"/>
+
+    <ImageButton
+        android:id="@+id/favorite"
+        android:layout_width="@dimen/button_width"
+        android:layout_height="@dimen/button_height"
+        android:onClick="onClick"
+        android:layout_toRightOf="@id/home"
+        style="@android:style/Widget.Material.Light.Button.Borderless"
+        android:src="@drawable/notfavorite"/>
+
+    <ImageButton
+        android:id="@+id/back"
+        android:layout_width="@dimen/button_width"
+        android:layout_height="@dimen/button_height"
+        android:onClick="onClick"
+        android:layout_toRightOf="@id/favorite"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/back"/>
 
