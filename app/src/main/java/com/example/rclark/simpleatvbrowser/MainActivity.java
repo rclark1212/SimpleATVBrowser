@@ -65,7 +65,7 @@ import java.util.Locale;
 import java.util.Set;
 
 public class MainActivity extends Activity implements
-        View.OnClickListener, SearchbarFragment.OnMainActivityCallbackListener, WebviewFragment.OnMainActivityCallbackListener {
+        View.OnClickListener, SearchbarFragment.OnMainActivityCallbackListener, WebviewFragment.OnMainActivityCallbackListener, FavoritesFragment.OnMainActivityCallbackListener {
 
     private View mvControls;
 
@@ -101,6 +101,7 @@ public class MainActivity extends Activity implements
     protected static final int CALLBACK_UPDATE_URL = 3;
     protected static final int CALLBACK_HIDE_KEYBOARD = 4;
     protected static final int CALLBACK_UPDATE_FAVORITE = 5;
+    protected static final int CALLBACK_LOAD_FAVORITE = 6;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,7 +133,7 @@ public class MainActivity extends Activity implements
     }
 
     //Routine called by search bar fragment to request a page load
-    public void onMainActivityCallback(int code) {
+    public void onMainActivityCallback(int code, String url) {
         //make this more generic. may need to do several things...
         if (code == CALLBACK_LOAD_PAGE) {
             loadPage();
@@ -149,6 +150,14 @@ public class MainActivity extends Activity implements
             //and use this opportunity to enable/disable nav buttons
             mSearchFragment.mvBack.setEnabled(mWebFragment.mWView.canGoBack());
             mSearchFragment.mvForward.setEnabled(mWebFragment.mWView.canGoForward());
+        } else if (code == CALLBACK_LOAD_FAVORITE) {
+            //load a favorite
+            //first, swap fragments
+            showFavorites();
+            //then update edit box
+            mSearchFragment.updateEditBox(url);
+            //then load page
+            loadPage();
         }
     }
 
@@ -569,6 +578,8 @@ public class MainActivity extends Activity implements
                     //otherwise just update thumbnail
                     ContentValues contentValues = new ContentValues();
                     contentValues.put(FavContract.FavoritesEntry.COLUMN_FAVORITES_URL, url);
+                    contentValues.put(FavContract.FavoritesEntry.COLUMN_FAVORITE_TITLE, mWebFragment.mWView.getTitle());
+                    contentValues.put(FavContract.FavoritesEntry.COLUMN_FAVORITE_HTTP, mSearchFragment.getEditBox());
                     contentValues.put(FavContract.FavoritesEntry.COLUMN_FAVORITES_THUMB, getWebBytes());
                     getApplicationContext().getContentResolver().update(favoriteSearchUri, contentValues, null, null);
                 }
@@ -576,6 +587,8 @@ public class MainActivity extends Activity implements
                 //if not, insert it...
                 ContentValues contentValues = new ContentValues();
                 contentValues.put(FavContract.FavoritesEntry.COLUMN_FAVORITES_URL, url);
+                contentValues.put(FavContract.FavoritesEntry.COLUMN_FAVORITE_TITLE, mWebFragment.mWView.getTitle());
+                contentValues.put(FavContract.FavoritesEntry.COLUMN_FAVORITE_HTTP, mSearchFragment.getEditBox());
                 contentValues.put(FavContract.FavoritesEntry.COLUMN_FAVORITES_THUMB, getWebBytes());
                 getApplicationContext().getContentResolver().insert(FavContract.FavoritesEntry.CONTENT_URI, contentValues);
                 setFavoriteButton(true);

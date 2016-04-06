@@ -33,8 +33,10 @@ public class FavContract {
 
         public static final String TABLE_NAME = "favorites";
 
-        public static final String COLUMN_FAVORITES_URL = "url_label";
+        public static final String COLUMN_FAVORITES_URL = "url_label";      //the actual url
         public static final String COLUMN_FAVORITES_THUMB = "url_thumb";
+        public static final String COLUMN_FAVORITE_TITLE = "url_title";
+        public static final String COLUMN_FAVORITE_HTTP = "url_http";       //the starting (friendly) edit box name of web site
 
         public static Uri buildFavoriteUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);

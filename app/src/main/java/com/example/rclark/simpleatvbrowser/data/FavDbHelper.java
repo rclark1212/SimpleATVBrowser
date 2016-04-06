@@ -25,6 +25,8 @@ public class FavDbHelper extends SQLiteOpenHelper {
         final String SQL_CREATE_FAVS_TABLE = "CREATE TABLE " + FavContract.FavoritesEntry.TABLE_NAME + " (" +
                 FavContract.FavoritesEntry._ID + " INTEGER PRIMARY KEY, " +
                 FavContract.FavoritesEntry.COLUMN_FAVORITES_URL + " TEXT UNIQUE NOT NULL, " +
+                FavContract.FavoritesEntry.COLUMN_FAVORITE_TITLE + " TEXT, " +
+                FavContract.FavoritesEntry.COLUMN_FAVORITE_HTTP + " TEXT, " +
                 FavContract.FavoritesEntry.COLUMN_FAVORITES_THUMB + " BLOB " +
                 " );";
 

@@ -1,5 +1,6 @@
 package com.example.rclark.simpleatvbrowser;
 
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -38,6 +39,13 @@ public class FavoritesFragment extends BrowseFragment {
 
     public final static int MAX_COLUMNS = 5;
 
+    OnMainActivityCallbackListener mCallback;
+    //Put in an interface for container activity to implement so that fragment can deliver messages
+    public interface OnMainActivityCallbackListener {
+        //called by FavoritesFragment when a url is selected
+        public void onMainActivityCallback(int code, String url);
+    }
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         Log.i(TAG, "onCreate");
@@ -50,6 +58,25 @@ public class FavoritesFragment extends BrowseFragment {
         setupEventListeners();
     }
 
+    @Override
+    public void onAttach(Context ctx) {
+        super.onAttach(ctx);
+
+        // This makes sure that the container activity has implemented
+        // the callback interface. If not, it throws an exception.
+        // housekeeping function
+        try {
+            mCallback = (OnMainActivityCallbackListener) ctx;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(ctx.toString()
+                    + " must implement OnMainActivityCallbackListener");
+        }
+    }
+
+
+    /*
+        Loads data from content provider into the browsefragment
+     */
     private void loadData() {
 
         /*
@@ -81,6 +108,8 @@ public class FavoritesFragment extends BrowseFragment {
 
                 //grab the data
                 od.url = c.getString(c.getColumnIndex(FavContract.FavoritesEntry.COLUMN_FAVORITES_URL));
+                od.title = c.getString(c.getColumnIndex(FavContract.FavoritesEntry.COLUMN_FAVORITE_TITLE));
+                od.httpedit = c.getString(c.getColumnIndex(FavContract.FavoritesEntry.COLUMN_FAVORITE_HTTP));
                 byte[] blob = c.getBlob(c.getColumnIndex(FavContract.FavoritesEntry.COLUMN_FAVORITES_THUMB));
                 Bitmap bitMapImage = BitmapFactory.decodeByteArray(blob, 0, blob.length);
                 od.thumb = new BitmapDrawable(bitMapImage);
@@ -121,7 +150,7 @@ public class FavoritesFragment extends BrowseFragment {
         setHeadersTransitionOnBackEnabled(true);
 
         // set fastLane (or headers) background color
-        setBrandColor(getResources().getColor(R.color.fastlane_background));
+        setBrandColor(getResources().getColor(R.color.primary_dark));
         // set search icon color
         //setSearchAffordanceColor(getResources().getColor(R.color.search_opaque));
 
@@ -142,7 +171,9 @@ public class FavoritesFragment extends BrowseFragment {
             if (item instanceof ObjectDetail) {
                 ObjectDetail favorite = (ObjectDetail) item;
                 Log.d(TAG, "Item: " + item.toString());
-                /* kick off the browse...
+                //kick off the browse
+                mCallback.onMainActivityCallback(MainActivity.CALLBACK_LOAD_FAVORITE, favorite.url);
+                /* intent example code...
                 Intent intent = new Intent(getActivity(), DetailsActivity.class);
                 intent.putExtra(DetailsActivity.MOVIE, movie);
 

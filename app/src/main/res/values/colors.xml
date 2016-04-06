@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="primary">#76b900</color>
+    <color name="primary_dark">#468900</color>
     <color name="default_background">#000080</color>
     <color name="selected_background">#800000</color>
     <color name="fastlane_background">#0096a6</color>

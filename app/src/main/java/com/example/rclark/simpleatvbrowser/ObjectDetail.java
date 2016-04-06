@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable;
  */
 public class ObjectDetail {
     public String url;
+    public String title;
+    public String httpedit;
     public Drawable thumb;
-    //FIXME - add title of web page and originalUrl or edit box storage
 }

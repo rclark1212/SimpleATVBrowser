@@ -36,7 +36,7 @@ public class SearchbarFragment extends Fragment {
     //Put in an interface for container activity to implement so that fragment can deliver messages
     public interface OnMainActivityCallbackListener {
         //called by SearchbarFragment when a url is selected
-        public void onMainActivityCallback(int code);
+        public void onMainActivityCallback(int code, String url);
     }
 
 
@@ -63,7 +63,7 @@ public class SearchbarFragment extends Fragment {
                 if ((actionId == EditorInfo.IME_ACTION_DONE) || ((event.getKeyCode() == KeyEvent.KEYCODE_ENTER) && (event.getAction() == KeyEvent.ACTION_DOWN))) {
                     //We got a done or enter. Go ahead and clean up the text box and load page...
                     cleanUpEdit();
-                    mCallback.onMainActivityCallback(MainActivity.CALLBACK_LOAD_PAGE);
+                    mCallback.onMainActivityCallback(MainActivity.CALLBACK_LOAD_PAGE, null);
                     return true;
                 } else {
                     return false;

@@ -55,7 +55,8 @@ public class CardPresenter extends Presenter {
 
         Log.d(TAG, "onBindViewHolder");
         if (favorite.url.length() > 0) {
-            cardView.setTitleText(favorite.url);
+            cardView.setTitleText(favorite.title);
+            cardView.setContentText(favorite.url);
             cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
 
             if (favorite.thumb != null) {

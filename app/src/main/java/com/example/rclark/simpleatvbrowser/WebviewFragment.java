@@ -31,7 +31,7 @@ public class WebviewFragment extends Fragment {
     //Put in an interface for container activity to implement so that fragment can deliver messages
     public interface OnMainActivityCallbackListener {
         //called by WebviewFragment when a url is selected
-        public void onMainActivityCallback(int code);
+        public void onMainActivityCallback(int code, String url);
     }
 
     @Override
@@ -50,9 +50,9 @@ public class WebviewFragment extends Fragment {
             @Override
             public void onScrollChange(View v, int nx, int ny, int ox, int oy) {
                 if (ny > HIDE_SEARCH_AT_YSCROLL) { //put in a bit of a threshold...
-                    mCallback.onMainActivityCallback(MainActivity.CALLBACK_HIDE_BAR);
+                    mCallback.onMainActivityCallback(MainActivity.CALLBACK_HIDE_BAR, null);
                 } else if (ny == 0) {
-                    mCallback.onMainActivityCallback(MainActivity.CALLBACK_SHOW_BAR);
+                    mCallback.onMainActivityCallback(MainActivity.CALLBACK_SHOW_BAR, null);
                 }
             }
         });
@@ -191,13 +191,13 @@ public class WebviewFragment extends Fragment {
 
             //update url text
             if (!mbDontUpdate) {
-                mCallback.onMainActivityCallback(MainActivity.CALLBACK_UPDATE_URL);
+                mCallback.onMainActivityCallback(MainActivity.CALLBACK_UPDATE_URL, null);
             } else {
                 mbDontUpdate = false;
             }
 
             //and update favorites
-            mCallback.onMainActivityCallback(MainActivity.CALLBACK_UPDATE_FAVORITE);
+            mCallback.onMainActivityCallback(MainActivity.CALLBACK_UPDATE_FAVORITE, null);
         }
 
         //when you click page to page, want address bar to show new address
@@ -208,11 +208,11 @@ public class WebviewFragment extends Fragment {
 
             //update url text (clear don't update flag on finish)
             if (!mbDontUpdate) {
-                mCallback.onMainActivityCallback(MainActivity.CALLBACK_UPDATE_URL);
+                mCallback.onMainActivityCallback(MainActivity.CALLBACK_UPDATE_URL, null);
             }
 
             //and update favorites
-            mCallback.onMainActivityCallback(MainActivity.CALLBACK_UPDATE_FAVORITE);
+            mCallback.onMainActivityCallback(MainActivity.CALLBACK_UPDATE_FAVORITE, null);
         }
 
     }
