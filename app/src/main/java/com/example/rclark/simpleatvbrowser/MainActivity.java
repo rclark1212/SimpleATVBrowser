@@ -11,11 +11,19 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.ActivityNotFoundException;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
@@ -38,11 +46,15 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ListPopupWindow;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.rclark.simpleatvbrowser.data.FavContract;
+
+import java.io.ByteArrayOutputStream;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
@@ -57,16 +69,25 @@ public class MainActivity extends Activity implements
 
     private View mvControls;
 
+    //Variables for the history list
     ListPopupWindow mlpw;        //popup window
-
-    List<String> m_urlist;
+    List<String> m_urlist;      //history list
     private final static int MAX_HISTORY = 10;
     //Preference key for history
     private final static String HISTORY_LIST = "history_list";
 
+    //Variables for the favorites list
+    boolean mbFavoritesActive = false;
+    List<String> m_favoriteURLs;
+    List<String> m_favoriteThumbs;
+    private final static int MAX_FAVORITES = 10;
+    private final static String FAVORITES_LIST = "favorites_list";
+    private final static String FAVORITES_THUMBS = "favorites_thumbs";
+
     //Fragments...
     SearchbarFragment mSearchFragment;
     WebviewFragment mWebFragment;
+    FavoritesFragment mFavoritesFragment;
 
     private int mZoom = 0;      //used to track zoom status
     private final static float ZOOMIN_VALUE = 1.5f;             //change this constant to change the zoom step
@@ -84,6 +105,7 @@ public class MainActivity extends Activity implements
     protected static final int CALLBACK_SHOW_BAR = 2;
     protected static final int CALLBACK_UPDATE_URL = 3;
     protected static final int CALLBACK_HIDE_KEYBOARD = 4;
+    protected static final int CALLBACK_UPDATE_FAVORITE = 5;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,16 +118,15 @@ public class MainActivity extends Activity implements
         //get a view to searchbar
         mvControls = findViewById(R.id.searchbar_fragment);
 
-        //Get the fragments...
+        //Get the search fragment... (note - webview fragment dynamically loaded when needed)
         mSearchFragment = (SearchbarFragment) getFragmentManager().findFragmentById(R.id.searchbar_fragment);
-        mWebFragment = (WebviewFragment) getFragmentManager().findFragmentById(R.id.webview_fragment);
 
         //and set up final initialization
         //set the initial edittext...
         mSearchFragment.updateEditBox("www.google.com");
 
         //and load initial webview
-        loadPage();
+        loadPage();   //note - dynamically loads fragment if it does not exist...
 
         //set focus to voice input
         mSearchFragment.mvVoice.requestFocus();
@@ -128,9 +149,11 @@ public class MainActivity extends Activity implements
             mSearchFragment.updateEditBox(mWebFragment.getURL());
         } else if (code == CALLBACK_HIDE_KEYBOARD) {
             hideKeyboard();
+        } else if (code == CALLBACK_UPDATE_FAVORITE) {
+            setFavoriteButton(isFavorite(mWebFragment.getURL()));
+            //FIXME - use this as an opportunity to call .canGoBack, .canGoForward to update those buttons
         }
     }
-
 
     /*
         Shows or hides the searchbar
@@ -177,8 +200,26 @@ public class MainActivity extends Activity implements
         } */
     }
 
+
+    /*
+        setFavoriteButton
+        Sets favorite button to favorite if true, not favorite if false
+     */
+    private void setFavoriteButton(boolean bFavorite) {
+        ImageButton b = (ImageButton) mSearchFragment.mvFavorite;
+        if (bFavorite) {
+            //change favorite icon to solid
+            b.setImageResource(R.drawable.favorite);
+        } else {
+            //change to hollow
+            b.setImageResource(R.drawable.notfavorite);
+        }
+    }
+
+
     /*
         Loads a web page from the URL/text that is in the edit box
+        Note - dynamically loads fragment if it does not exist...
      */
     private void loadPage() {
         //Get the edit box text
@@ -199,11 +240,33 @@ public class MainActivity extends Activity implements
             //add this url to the list
             addToList(url);
             //if so, go ahead and load (and don't bother setting the edit text url with the full address)
-            mWebFragment.loadURL(http, true);
+            loadWebUrl(http, true);
         } else {
             //do a google search with the terms typed into the edit box...
             http = GOOGLE_SEARCH + url;
-            mWebFragment.loadURL(http, false);
+            loadWebUrl(http, false);
+        }
+    }
+
+    /*
+        loadWebUrl - loads the webview with supplied URL.
+        Note - if webview fragment not created, will create it and will pass bundle to webview
+     */
+    void loadWebUrl(String http, boolean bEatUpdate) {
+
+        if (mWebFragment == null) {
+            mWebFragment = new WebviewFragment();
+            Bundle args = new Bundle();
+            args.putString(WebviewFragment.ARG_URL, http);
+            if (bEatUpdate) {
+                args.putInt(WebviewFragment.ARG_EATUPDATE, 1);
+            } else {
+                args.putInt(WebviewFragment.ARG_EATUPDATE, 0);
+            }
+            mWebFragment.setArguments(args);
+            getFragmentManager().beginTransaction().add(R.id.fragment_container, mWebFragment).commit();
+        } else {
+            mWebFragment.loadURL(http, bEatUpdate);
         }
     }
 
@@ -421,7 +484,8 @@ public class MainActivity extends Activity implements
                 break;
             }
             case R.id.refresh: {
-                loadPage();
+                //loadPage();
+                mWebFragment.mWView.reload();
                 break;
             }
             case R.id.help: {
@@ -432,7 +496,157 @@ public class MainActivity extends Activity implements
                 popupList();
                 break;
             }
+            case R.id.home: {
+                showFavorites();
+                break;
+            }
+            case R.id.favorite: {
+                updateFavorites(true);
+                break;
+            }
         }
+    }
+
+    /*
+        returns true if site is a favorite
+    */
+    boolean isFavorite(String url) {
+        boolean bret = false;
+        Uri favoriteDB = FavContract.FavoritesEntry.CONTENT_URI;
+
+        //Now, search for the url
+        Uri favoriteSearchUri = favoriteDB.buildUpon().appendPath(url).build();
+        Cursor c = getApplicationContext().getContentResolver().query(favoriteSearchUri, null, null, null, null);
+
+        //now check if it is stored in favorites already...
+        if (c.getCount() > 0) {
+            bret = true;
+        }
+
+        c.close();
+
+        return bret;
+    }
+
+    /*
+        Updates the content provider based upon the web url.
+        if btoggle is true, will toggle favorite on/off.
+        if btoggle is false, will only update thumb if favorite exists
+     */
+    private void updateFavorites(boolean btoggle) {
+        //is web fragment visible?
+        if (isWebFragmentActive()) {
+            //get the URL...
+            String url = mWebFragment.getURL();
+
+            //Get the favorites DB reference...
+            Uri favoriteDB = FavContract.FavoritesEntry.CONTENT_URI;
+
+            //Now, search for the url
+            Uri favoriteSearchUri = favoriteDB.buildUpon().appendPath(url).build();
+            Cursor c = getApplicationContext().getContentResolver().query(favoriteSearchUri, null, null, null, null);
+
+            //now check if it is stored in favorites already...
+            if (c.getCount() > 0) {
+                c.moveToFirst();
+                if (btoggle) {
+                    //if it is in favorites and we are toggling, delete
+                    getApplicationContext().getContentResolver().delete(FavContract.FavoritesEntry.CONTENT_URI,
+                            FavContract.FavoritesEntry.COLUMN_FAVORITES_URL + " = ?",
+                            new String[] {url});
+                    //finally, change icon to unfavorite
+                    setFavoriteButton(false);
+                } else {
+                    //otherwise just update thumbnail
+                    ContentValues contentValues = new ContentValues();
+                    contentValues.put(FavContract.FavoritesEntry.COLUMN_FAVORITES_URL, url);
+                    contentValues.put(FavContract.FavoritesEntry.COLUMN_FAVORITES_THUMB, getWebBytes());
+                    getApplicationContext().getContentResolver().update(favoriteSearchUri, contentValues, null, null);
+                }
+            } else {
+                //if not, insert it...
+                ContentValues contentValues = new ContentValues();
+                contentValues.put(FavContract.FavoritesEntry.COLUMN_FAVORITES_URL, url);
+                contentValues.put(FavContract.FavoritesEntry.COLUMN_FAVORITES_THUMB, getWebBytes());
+                getApplicationContext().getContentResolver().insert(FavContract.FavoritesEntry.CONTENT_URI, contentValues);
+                setFavoriteButton(true);
+            }
+
+            c.close();
+
+        } else {
+            //toggle off favorite for the currently selected favorites item
+            //FIXME - todo
+        }
+    }
+
+    /*
+        getWebBytes
+        returns bytestream of web page image that can be put into content values blob
+     */
+    private byte[] getWebBytes() {
+        //capture visible webview screen to bitmap
+        Bitmap bm = Bitmap.createBitmap(mWebFragment.mWView.getWidth(), mWebFragment.mWView.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bm);
+        Paint paint = new Paint();
+        int height = bm.getHeight();
+        canvas.drawBitmap(bm, 0, height, paint);
+        mWebFragment.mWView.draw(canvas);
+
+        //now convert to byte[]
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bm.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+        byte[] imageInByte = stream.toByteArray();
+
+        return imageInByte;
+    }
+
+
+    /*
+        Returns true if web fragment is active
+     */
+    private boolean isWebFragmentActive() {
+        boolean bret = false;
+
+        if (mWebFragment != null) {
+            if (mWebFragment.isVisible()) {
+                bret = true;
+            }
+        }
+
+        return bret;
+    }
+
+
+    private void showFavorites() {
+
+        if (!mbFavoritesActive) {
+            //show the favorites fragment!!!
+            mbFavoritesActive = true;
+            //create favorite fragment instance if it does not exist...
+            if (mFavoritesFragment == null) {
+                mFavoritesFragment = new FavoritesFragment();
+            }
+
+            //and replace web with this one...
+            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+
+            transaction.replace(R.id.fragment_container, mFavoritesFragment);
+
+            transaction.commit();
+        } else {
+            //show web fragment
+            mbFavoritesActive = false;
+
+            //and replace web with this one...
+            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+
+            transaction.replace(R.id.fragment_container, mWebFragment);
+
+            transaction.commit();
+
+        }
+
     }
 
     /*

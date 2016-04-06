@@ -25,6 +25,12 @@
             </intent-filter>
         </activity>
 
+        <provider
+            android:authorities="com.example.rclark.simpleatvbrowser"
+            android:name=".data.FavProvider"
+            android:exported="false"
+            android:syncable="true" />
+
     </application>
 
 </manifest>

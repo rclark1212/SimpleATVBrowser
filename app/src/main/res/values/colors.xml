@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="primary">#76b900</color>
-    <color name="focused">#b6f900</color>
-    <color name="pressed">#368900</color>
+    <color name="default_background">#000080</color>
+    <color name="selected_background">#800000</color>
+    <color name="fastlane_background">#0096a6</color>
+    <color name="search_opaque">#ffaa3f</color>
 </resources>

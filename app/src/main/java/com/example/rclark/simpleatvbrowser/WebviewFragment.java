@@ -3,6 +3,7 @@ package com.example.rclark.simpleatvbrowser;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +18,8 @@ import android.webkit.WebViewClient;
 public class WebviewFragment extends Fragment {
 
     private final static int HIDE_SEARCH_AT_YSCROLL = 200;
+    public final static String ARG_URL = "url";
+    public final static String ARG_EATUPDATE = "update";
 
     public WebView mWView;
     private boolean mbDontUpdate;
@@ -37,23 +40,34 @@ public class WebviewFragment extends Fragment {
 
         View retView = inflater.inflate(R.layout.webview_fragment, container, false);
 
-        if (retView != null) {
-            mWView = (WebView) retView.findViewById(R.id.webview);
+        mWView = (WebView) retView.findViewById(R.id.webview);
 
-            //initialize the web view
-            initWebView(mWView);
+        //initialize the web view
+        initWebView(mWView);
 
-            //process scroll events to show/hide searchbar
-            mWView.setOnScrollChangeListener(new WebView.OnScrollChangeListener() {
-                @Override
-                public void onScrollChange(View v, int nx, int ny, int ox, int oy) {
-                    if (ny > HIDE_SEARCH_AT_YSCROLL) { //put in a bit of a threshold...
-                        mCallback.onMainActivityCallback(MainActivity.CALLBACK_HIDE_BAR);
-                    } else if (ny == 0) {
-                        mCallback.onMainActivityCallback(MainActivity.CALLBACK_SHOW_BAR);
-                    }
+        //process scroll events to show/hide searchbar
+        mWView.setOnScrollChangeListener(new WebView.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(View v, int nx, int ny, int ox, int oy) {
+                if (ny > HIDE_SEARCH_AT_YSCROLL) { //put in a bit of a threshold...
+                    mCallback.onMainActivityCallback(MainActivity.CALLBACK_HIDE_BAR);
+                } else if (ny == 0) {
+                    mCallback.onMainActivityCallback(MainActivity.CALLBACK_SHOW_BAR);
                 }
-            });
+            }
+        });
+
+        //Now check args... (we pass initial web site to load as arguments when webview not created yet).
+        if (getArguments() != null) {
+            if (getArguments().containsKey(ARG_URL)) {
+                String http = getArguments().getString(ARG_URL);
+                int eatUpdate = getArguments().getInt(ARG_EATUPDATE);
+                if (eatUpdate != 0) {
+                    loadURL(http, true);
+                } else {
+                    loadURL(http, false);
+                }
+            }
         }
 
         return retView;
@@ -173,7 +187,26 @@ public class WebviewFragment extends Fragment {
             } else {
                 mbDontUpdate = false;
             }
+
+            //and update favorites
+            mCallback.onMainActivityCallback(MainActivity.CALLBACK_UPDATE_FAVORITE);
         }
+
+        //when you click page to page, want address bar to show new address
+        //onpagefinished takes too long... So try updating on the start
+        @Override
+        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+            super.onPageStarted(view, url, favicon);
+
+            //update url text (clear don't update flag on finish)
+            if (!mbDontUpdate) {
+                mCallback.onMainActivityCallback(MainActivity.CALLBACK_UPDATE_URL);
+            }
+
+            //and update favorites
+            mCallback.onMainActivityCallback(MainActivity.CALLBACK_UPDATE_FAVORITE);
+        }
+
     }
 
 }

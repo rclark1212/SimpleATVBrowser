@@ -29,6 +29,7 @@ public class SearchbarFragment extends Fragment {
     public View mvRefresh;
     public View mvHelp;
     public View mvList;
+    public View mvFavorite;
 
     OnMainActivityCallbackListener mCallback;
     //Put in an interface for container activity to implement so that fragment can deliver messages
@@ -51,6 +52,7 @@ public class SearchbarFragment extends Fragment {
         mvRefresh = retView.findViewById(R.id.refresh);
         mvHelp = retView.findViewById(R.id.help);
         mvList = retView.findViewById(R.id.dropdown);
+        mvFavorite = retView.findViewById(R.id.favorite);
 
         //process edittext
         mEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
