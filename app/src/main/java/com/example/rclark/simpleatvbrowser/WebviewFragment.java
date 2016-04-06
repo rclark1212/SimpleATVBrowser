@@ -114,6 +114,14 @@ public class WebviewFragment extends Fragment {
     }
 
     //
+    //  Go back function
+    //
+    public void goForwardWeb() {
+        mbDontUpdate = false;   //we want to update post load...
+        mWView.goForward();
+    }
+
+    //
     //  Get the URL
     //
     public String getURL() {

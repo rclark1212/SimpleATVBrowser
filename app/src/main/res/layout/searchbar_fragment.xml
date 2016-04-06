@@ -40,11 +40,20 @@
         android:src="@drawable/back"/>
 
     <ImageButton
-        android:id="@+id/voice"
+        android:id="@+id/forward"
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
         android:onClick="onClick"
         android:layout_toRightOf="@id/back"
+        style="@android:style/Widget.Material.Light.Button.Borderless"
+        android:src="@drawable/forward"/>
+
+    <ImageButton
+        android:id="@+id/voice"
+        android:layout_width="@dimen/button_width"
+        android:layout_height="@dimen/button_height"
+        android:onClick="onClick"
+        android:layout_toRightOf="@id/forward"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/mic"/>
 

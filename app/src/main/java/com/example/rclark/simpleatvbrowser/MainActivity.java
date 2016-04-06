@@ -151,7 +151,9 @@ public class MainActivity extends Activity implements
             hideKeyboard();
         } else if (code == CALLBACK_UPDATE_FAVORITE) {
             setFavoriteButton(isFavorite(mWebFragment.getURL()));
-            //FIXME - use this as an opportunity to call .canGoBack, .canGoForward to update those buttons
+            //and use this opportunity to enable/disable nav buttons
+            mSearchFragment.mvBack.setEnabled(mWebFragment.mWView.canGoBack());
+            mSearchFragment.mvForward.setEnabled(mWebFragment.mWView.canGoForward());
         }
     }
 
@@ -366,6 +368,14 @@ public class MainActivity extends Activity implements
     }
 
     /*
+    Go forward a web page
+ */
+    public void goForward() {
+        mWebFragment.goForwardWeb();
+    }
+
+
+    /*
         Do a voice search entry for a web site (or for search)
         Use the standard android intent service for this. This routine kicks off the intent.
      */
@@ -477,6 +487,10 @@ public class MainActivity extends Activity implements
         switch (v.getId()) {
             case R.id.back: {
                 goBack();
+                break;
+            }
+            case R.id.forward: {
+                goForward();
                 break;
             }
             case R.id.voice: {

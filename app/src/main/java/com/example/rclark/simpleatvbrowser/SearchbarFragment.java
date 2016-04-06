@@ -25,6 +25,7 @@ public class SearchbarFragment extends Fragment {
     //Keep a copy of the views
     public EditText mEdit;
     public View mvBack;
+    public View mvForward;
     public View mvVoice;
     public View mvRefresh;
     public View mvHelp;
@@ -53,6 +54,7 @@ public class SearchbarFragment extends Fragment {
         mvHelp = retView.findViewById(R.id.help);
         mvList = retView.findViewById(R.id.dropdown);
         mvFavorite = retView.findViewById(R.id.favorite);
+        mvForward = retView.findViewById(R.id.forward);
 
         //process edittext
         mEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
