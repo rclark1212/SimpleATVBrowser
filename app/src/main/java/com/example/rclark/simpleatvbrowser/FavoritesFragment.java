@@ -1,7 +1,12 @@
 package com.example.rclark.simpleatvbrowser;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Movie;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v17.leanback.app.BrowseFragment;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
@@ -19,6 +24,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.example.rclark.simpleatvbrowser.data.FavContract;
+
 import java.util.ArrayList;
 
 /**
@@ -27,6 +34,8 @@ import java.util.ArrayList;
 public class FavoritesFragment extends BrowseFragment {
     private static final String TAG = "FavoritesFragment";
     private ArrayObjectAdapter mRowsAdapter;
+    private ArrayList<ObjectDetail> mObjects;
+
     public final static int MAX_COLUMNS = 5;
 
     @Override
@@ -36,44 +45,76 @@ public class FavoritesFragment extends BrowseFragment {
 
         setupUIElements();
 
-        hackloadData();
+        loadData();
 
         setupEventListeners();
     }
 
-    private void hackloadData() {
+    private void loadData() {
 
-        //hack in some data...
-        ObjectDetail od1 = new ObjectDetail();
-        ObjectDetail od2 = new ObjectDetail();
-        od1.url = "www.nvidia.com";
-        od2.url = "www.google.com";
+        /*
+            GRRR - hate doing this.
+            Really should be a content adapter (CursorObjectAdapter).
+            The problem is that the browsefragment is too rigid. There is no way to control the length of
+            the rows if using cursor adapter. So for this application, it kind of sucks.
+            Tried a gridview and while it works, it obviously is not built for TV (then again, browser is not).
+            But really want to use a BrowseFragment. And I want to use the standard one - not a modified one that might break in future.
+            So lets hold our noses and manually mod the rows to keep row length sane and do it by _uggg_ _uggg_ _uggg_ preloading data
+            out of the content provider.
+            Only saving grace is there is no way CP is being updated behind our back. So functionality should not suffer.
+         */
+        //create backing array
+        mObjects = new ArrayList<ObjectDetail>();
+
+        //Get the favorites DB reference...
+        Uri favoriteDB = FavContract.FavoritesEntry.CONTENT_URI;
+
+        Cursor c = getActivity().getContentResolver().query(favoriteDB, null, null, null, null);
+
+        //now just suck up the data...
+        if (c.getCount() > 0) {
+            c.moveToFirst();
+
+            while (!c.isAfterLast()) {
+                //create the backing object
+                ObjectDetail od = new ObjectDetail();
+
+                //grab the data
+                od.url = c.getString(c.getColumnIndex(FavContract.FavoritesEntry.COLUMN_FAVORITES_URL));
+                byte[] blob = c.getBlob(c.getColumnIndex(FavContract.FavoritesEntry.COLUMN_FAVORITES_THUMB));
+                Bitmap bitMapImage = BitmapFactory.decodeByteArray(blob, 0, blob.length);
+                od.thumb = new BitmapDrawable(bitMapImage);
+
+                //add the object
+                mObjects.add(od);
+
+                //and go to next
+                c.moveToNext();
+            }
+        }
 
         mRowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());
         CardPresenter cardPresenter = new CardPresenter();
 
-        HeaderItem header = new HeaderItem(0, "");
-        ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(cardPresenter);
-        listRowAdapter.add(od1);
-        listRowAdapter.add(od2);
-        listRowAdapter.add(od1);
-        listRowAdapter.add(od2);
-        listRowAdapter.add(od1);
-        listRowAdapter.add(od2);
-        listRowAdapter.add(od1);
-        listRowAdapter.add(od2);
-        listRowAdapter.add(od1);
-        listRowAdapter.add(od2);
-        listRowAdapter.add(od1);
-        listRowAdapter.add(od2);
-        mRowsAdapter.add(new ListRow(header, listRowAdapter));
+        //and shove it into object adapter
+        for (int row = 0; row <= (mObjects.size()/MAX_COLUMNS); row++) {
+            HeaderItem header = new HeaderItem(row, "");
+            ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(cardPresenter);
+            for (int col = 0; col < MAX_COLUMNS; col ++) {
+                int i = row*MAX_COLUMNS + col;
+                if (i >= mObjects.size()) {
+                    break;
+                }
+                listRowAdapter.add(mObjects.get(i));
+            }
+            //add row header and listRowAdapter
+            mRowsAdapter.add(new ListRow(header, listRowAdapter));
+        }
 
         setAdapter(mRowsAdapter);
     }
 
     private void setupUIElements() {
-        // setBadgeDrawable(getActivity().getResources().getDrawable(
-        // R.drawable.videos_by_google_banner));
         setTitle(getString(R.string.favorites)); // Badge, when set, takes precedent
         // over title
         setHeadersState(HEADERS_DISABLED);
@@ -82,7 +123,9 @@ public class FavoritesFragment extends BrowseFragment {
         // set fastLane (or headers) background color
         setBrandColor(getResources().getColor(R.color.fastlane_background));
         // set search icon color
-        setSearchAffordanceColor(getResources().getColor(R.color.search_opaque));
+        //setSearchAffordanceColor(getResources().getColor(R.color.search_opaque));
+
+        //setBadgeDrawable(getResources().getDrawable(R.drawable.www));
     }
 
 

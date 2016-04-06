@@ -78,11 +78,6 @@ public class MainActivity extends Activity implements
 
     //Variables for the favorites list
     boolean mbFavoritesActive = false;
-    List<String> m_favoriteURLs;
-    List<String> m_favoriteThumbs;
-    private final static int MAX_FAVORITES = 10;
-    private final static String FAVORITES_LIST = "favorites_list";
-    private final static String FAVORITES_THUMBS = "favorites_thumbs";
 
     //Fragments...
     SearchbarFragment mSearchFragment;
