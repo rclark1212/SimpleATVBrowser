@@ -60,7 +60,8 @@ public class WebviewFragment extends Fragment {
         });
 
         //Now check args... (we pass initial web site to load as arguments when webview not created yet).
-        if (getArguments() != null) {
+        //Note - we only want to do this for the first load (use webViewBundle == null to tell us it is the first load)
+        if ((getArguments() != null) && (webViewBundle == null)) {
             if (getArguments().containsKey(ARG_URL)) {
                 String http = getArguments().getString(ARG_URL);
                 int eatUpdate = getArguments().getInt(ARG_EATUPDATE);
