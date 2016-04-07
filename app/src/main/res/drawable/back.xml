@@ -1,4 +1,5 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@drawable/back_sel" android:state_focused="true" android:state_enabled="true" />
+    <item android:drawable="@drawable/back_gray" android:state_enabled="false" />
     <item android:drawable="@drawable/back_norm" />
 </selector>

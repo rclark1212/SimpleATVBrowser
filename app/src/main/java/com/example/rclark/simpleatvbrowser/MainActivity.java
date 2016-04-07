@@ -1,7 +1,7 @@
 package com.example.rclark.simpleatvbrowser;
 
 /*
-    Hack browser for ATV.
+    Simple (less simple now) browser for ATV.
     Started with a phone/tablet project and just added the LEANBACK intents + some controller support.
     Redid into a second project "HackATVBrowser2" which starts with an ATV project (may make some difference)
 
@@ -11,6 +11,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.ActivityNotFoundException;
@@ -23,6 +24,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -48,6 +50,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListPopupWindow;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -69,15 +72,15 @@ public class MainActivity extends Activity implements
 
     private View mvControls;
 
+    //default home url
+    private final static String DEFAULT_HOME = "www.google.com";
+
     //Variables for the history list
     ListPopupWindow mlpw;        //popup window
     List<String> m_urlist;      //history list
     private final static int MAX_HISTORY = 10;
     //Preference key for history
     private final static String HISTORY_LIST = "history_list";
-
-    //Variables for the favorites list
-    boolean mbFavoritesActive = false;
 
     //Fragments...
     SearchbarFragment mSearchFragment;
@@ -118,17 +121,22 @@ public class MainActivity extends Activity implements
         mSearchFragment = (SearchbarFragment) getFragmentManager().findFragmentById(R.id.searchbar_fragment);
 
         //and set up final initialization
-        //set the initial edittext...
-        mSearchFragment.updateEditBox("www.google.com");
 
-        //and load initial webview
-        loadPage();   //note - dynamically loads fragment if it does not exist...
+        //set the initial edittext...
+        mSearchFragment.updateEditBox(DEFAULT_HOME);
+
+        //should we open favorites or main? depends on if there are favorites...
+        loadPage();
 
         //set focus to voice input
         mSearchFragment.mvVoice.requestFocus();
 
         //hide keyboard
         hideKeyboard();
+
+        if (favoriteCount() > 0) {
+            showFavorites(true);
+        }
 
     }
 
@@ -152,8 +160,8 @@ public class MainActivity extends Activity implements
             mSearchFragment.mvForward.setEnabled(mWebFragment.mWView.canGoForward());
         } else if (code == CALLBACK_LOAD_FAVORITE) {
             //load a favorite
-            //first, swap fragments
-            showFavorites();
+            //first, swap to webview
+            showFavorites(false);
             //then update edit box
             mSearchFragment.updateEditBox(url);
             //then load page
@@ -228,13 +236,16 @@ public class MainActivity extends Activity implements
         Note - dynamically loads fragment if it does not exist...
      */
     private void loadPage() {
+        //first, make sure to show web page when loading a page
+        showFavorites(false);
+
         //Get the edit box text
         String url = mSearchFragment.getEditBox();
         String http = url;
 
         //Does it have a valid prefix? (note, this is assumptive code that http:// is in right spot)
         //if not, add it.
-        if (!http.contains("http://")) {
+        if (!http.contains("http:/") && !http.contains("https:/")) {
             http = "http://" + url;
         }
 
@@ -314,16 +325,33 @@ public class MainActivity extends Activity implements
                     bEatKey = true;
                     doVoiceSearch();
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_L1) {
-                    if (mZoom > 0) {
+                    if ((mZoom > 0) && isWebFragmentActive()) {
                         mZoom--;
                         mWebFragment.setZoom(ZOOMOUT_VALUE);
                     }
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_R1) {
-                    mZoom++;
-                    mWebFragment.setZoom(ZOOMIN_VALUE);
+                    if (isWebFragmentActive()) {
+                        mZoom++;
+                        mWebFragment.setZoom(ZOOMIN_VALUE);
+                    }
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_B) {
-                    bEatKey = true;
-                    goBack();
+                    if (isWebFragmentActive()) {
+                        bEatKey = true;
+                        goBack();
+                    } else {
+                        //swap to web fragment
+                        showFavorites(false);
+                    }
+                } else if (event.getKeyCode() == KeyEvent.KEYCODE_DPAD_UP) {
+                    //okay - if user does a dpad up while on favorites page top row...
+                    //pop cursor to home button
+                    if (!isWebFragmentActive()) {
+                        //showing favorites
+                        if (mFavoritesFragment.getRow() == 0) {
+                            //put focus on search bar home
+                            mSearchFragment.mvHome.requestFocus();
+                        }
+                    }
                 }
             }
         }
@@ -342,20 +370,23 @@ public class MainActivity extends Activity implements
     @Override
     public boolean dispatchGenericMotionEvent(MotionEvent event) {
         if (event != null) {
-            //Check that this is a move action (rather than hover which the RS mouse sends)
-            if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                float x = event.getAxisValue(MotionEvent.AXIS_X);
-                float y = event.getAxisValue(MotionEvent.AXIS_Y);
+            //check that webfragment is visible
+            if (isWebFragmentActive()) {
+                //Check that this is a move action (rather than hover which the RS mouse sends)
+                if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                    float x = event.getAxisValue(MotionEvent.AXIS_X);
+                    float y = event.getAxisValue(MotionEvent.AXIS_Y);
 
-                //scale up the events...
-                int scale = PAN_SCALE_FACTOR;
+                    //scale up the events...
+                    int scale = PAN_SCALE_FACTOR;
 
-                int px = (int) (x * scale);
-                int py = (int) (y * scale);
+                    int px = (int) (x * scale);
+                    int py = (int) (y * scale);
 
-                //if we have movement, move...
-                if ((px != 0) || (py != 0)) {
-                    mWebFragment.setScroll(px, py);
+                    //if we have movement, move...
+                    if ((px != 0) || (py != 0)) {
+                        mWebFragment.setScroll(px, py);
+                    }
                 }
             }
         }
@@ -490,10 +521,12 @@ public class MainActivity extends Activity implements
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.back: {
+                showFavorites(false);
                 goBack();
                 break;
             }
             case R.id.forward: {
+                showFavorites(false);
                 goForward();
                 break;
             }
@@ -503,6 +536,7 @@ public class MainActivity extends Activity implements
             }
             case R.id.refresh: {
                 //loadPage();
+                showFavorites(false);
                 mWebFragment.mWView.reload();
                 break;
             }
@@ -515,15 +549,42 @@ public class MainActivity extends Activity implements
                 break;
             }
             case R.id.home: {
-                showFavorites();
+                //if no favorites, go home
+                if (favoriteCount() == 0) {
+                    mSearchFragment.updateEditBox(DEFAULT_HOME);
+                    loadPage();
+                } else {
+                    //otherwise show favorites
+                    showFavorites(isWebFragmentActive());    //toggles back and forth...
+                }
                 break;
             }
             case R.id.favorite: {
-                updateFavorites(true);
-                break;
+                if (isWebFragmentActive()) {
+                    updateFavorites(true);
+                    break;
+                }
             }
         }
     }
+
+    /*
+        Returns number of favorites
+     */
+    int favoriteCount() {
+        int iret = 0;
+
+        Uri favoriteDB = FavContract.FavoritesEntry.CONTENT_URI;
+
+        Cursor c = getApplicationContext().getContentResolver().query(favoriteDB, null, null, null, null);
+
+        iret = c.getCount();
+
+        c.close();
+
+        return iret;
+    }
+
 
     /*
         returns true if site is a favorite
@@ -628,11 +689,11 @@ public class MainActivity extends Activity implements
         Returns true if web fragment is active
      */
     private boolean isWebFragmentActive() {
-        boolean bret = false;
+        boolean bret = true;
 
         if (mWebFragment != null) {
-            if (mWebFragment.isVisible()) {
-                bret = true;
+            if (!mWebFragment.isVisible()) {
+                bret = false;
             }
         }
 
@@ -640,33 +701,54 @@ public class MainActivity extends Activity implements
     }
 
 
-    private void showFavorites() {
+    private void showFavorites(boolean bShow) {
 
-        if (!mbFavoritesActive) {
-            //show the favorites fragment!!!
-            mbFavoritesActive = true;
-            //create favorite fragment instance if it does not exist...
-            if (mFavoritesFragment == null) {
-                mFavoritesFragment = new FavoritesFragment();
+        //create fragment if it does not exist
+        //create favorite fragment instance if it does not exist...
+        if (mFavoritesFragment == null) {
+            mFavoritesFragment = new FavoritesFragment();
+        }
+
+
+        //check if fragment already visible...
+        if (bShow) {
+            //is fragment already visible?
+            if (mFavoritesFragment.isVisible()) {
+                //just return
+                return;
             }
 
-            //and replace web with this one...
+            //otherwise replace web with this one...
             FragmentTransaction transaction = getFragmentManager().beginTransaction();
 
             transaction.replace(R.id.fragment_container, mFavoritesFragment);
 
             transaction.commit();
+
+            getFragmentManager().executePendingTransactions();  //force the commit to take place
+
+            //and when you show favorites, always make favorite button active
+            setFavoriteButton(true);
         } else {
-            //show web fragment
-            mbFavoritesActive = false;
+            //is web fragment already visible?
+            if (isWebFragmentActive()) {
+                return;
+            }
 
-            //and replace web with this one...
-            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+            //otherwise show web fragment (if it has already been created - fix an issue on launch)
+            if (mWebFragment != null) {
+                //and replace web with this one...
+                FragmentTransaction transaction = getFragmentManager().beginTransaction();
 
-            transaction.replace(R.id.fragment_container, mWebFragment);
+                transaction.replace(R.id.fragment_container, mWebFragment);
 
-            transaction.commit();
+                transaction.commit();
 
+                getFragmentManager().executePendingTransactions();  //force the commit to take place
+
+                //fix up favorites button
+                setFavoriteButton(isFavorite(mWebFragment.getURL()));
+            }
         }
 
     }
@@ -685,10 +767,10 @@ public class MainActivity extends Activity implements
             //create the window
             mlpw = new ListPopupWindow(this);
 
-            //FIXME - use a custom layout that we override to get keyevents...
             mlpw.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, list));
             mlpw.setAnchorView(mSearchFragment.mEdit);
             mlpw.setModal(true);
+
             mlpw.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -701,6 +783,21 @@ public class MainActivity extends Activity implements
             });
 
             mlpw.show();
+
+            //set up a listener to exit if dpad right/left pressed
+            ListView lv = (ListView) mlpw.getListView();
+            if (lv != null) {
+                lv.setOnKeyListener(new ListView.OnKeyListener() {
+                    @Override
+                    public boolean onKey(View v, int keyCode, KeyEvent event) {
+                        if ((keyCode == KeyEvent.KEYCODE_DPAD_LEFT) || (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)) {
+                            mlpw.dismiss();
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+            }
         }
     }
 

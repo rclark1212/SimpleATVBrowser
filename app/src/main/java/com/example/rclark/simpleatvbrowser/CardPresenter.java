@@ -12,8 +12,9 @@ import android.view.ViewGroup;
 public class CardPresenter extends Presenter {
     private static final String TAG = "CardPresenter";
 
-    private static int CARD_WIDTH = 313;
-    private static int CARD_HEIGHT = 176;
+    private static int CARD_WIDTH = 391;
+    private static int CARD_HEIGHT = 220;
+
     private static int sSelectedBackgroundColor;
     private static int sDefaultBackgroundColor;
     private Drawable mDefaultCardImage;

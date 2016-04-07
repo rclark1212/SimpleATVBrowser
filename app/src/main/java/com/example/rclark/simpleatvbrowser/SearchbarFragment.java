@@ -31,6 +31,9 @@ public class SearchbarFragment extends Fragment {
     public View mvHelp;
     public View mvList;
     public View mvFavorite;
+    public View mvHome;
+
+    //note that button processing happens in mainactivity.
 
     OnMainActivityCallbackListener mCallback;
     //Put in an interface for container activity to implement so that fragment can deliver messages
@@ -55,6 +58,7 @@ public class SearchbarFragment extends Fragment {
         mvList = retView.findViewById(R.id.dropdown);
         mvFavorite = retView.findViewById(R.id.favorite);
         mvForward = retView.findViewById(R.id.forward);
+        mvHome = retView.findViewById(R.id.home);
 
         //process edittext
         mEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {

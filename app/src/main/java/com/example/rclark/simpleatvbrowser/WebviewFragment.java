@@ -14,6 +14,7 @@ import android.webkit.WebViewClient;
 
 /**
  * Created by rclark on 3/30/2016.
+ * FIXME - need to save/restore state on fragment swap
  */
 public class WebviewFragment extends Fragment {
 
@@ -148,6 +149,9 @@ public class WebviewFragment extends Fragment {
         //Enable javascript
         WebSettings webSettings = view.getSettings();
         webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
+        webSettings.setAllowFileAccess(true);
 
         //Set up to support zoom...
         webSettings.setSupportZoom(true);
@@ -168,6 +172,7 @@ public class WebviewFragment extends Fragment {
 
         //Set webview to our overriden class...
         view.setWebViewClient(new MyWebViewClient());
+
     }
 
     /*

@@ -36,8 +36,9 @@ public class FavoritesFragment extends BrowseFragment {
     private static final String TAG = "FavoritesFragment";
     private ArrayObjectAdapter mRowsAdapter;
     private ArrayList<ObjectDetail> mObjects;
+    private int mRow;
 
-    public final static int MAX_COLUMNS = 5;
+    public final static int MAX_COLUMNS = 4;
 
     OnMainActivityCallbackListener mCallback;
     //Put in an interface for container activity to implement so that fragment can deliver messages
@@ -73,6 +74,12 @@ public class FavoritesFragment extends BrowseFragment {
         }
     }
 
+    /*
+        Returns the row
+     */
+    public int getRow() {
+        return mRow;
+    }
 
     /*
         Loads data from content provider into the browsefragment
@@ -125,7 +132,7 @@ public class FavoritesFragment extends BrowseFragment {
         mRowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());
         CardPresenter cardPresenter = new CardPresenter();
 
-        //and shove it into object adapter
+        //and shove it into object adapter - ugg...
         for (int row = 0; row <= (mObjects.size()/MAX_COLUMNS); row++) {
             HeaderItem header = new HeaderItem(row, "");
             ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(cardPresenter);
@@ -150,7 +157,8 @@ public class FavoritesFragment extends BrowseFragment {
         setHeadersTransitionOnBackEnabled(true);
 
         // set fastLane (or headers) background color
-        setBrandColor(getResources().getColor(R.color.primary_dark));
+        //FIXME - this is not working
+        setBrandColor(getResources().getColor(R.color.fastlane_background));
         // set search icon color
         //setSearchAffordanceColor(getResources().getColor(R.color.search_opaque));
 
@@ -161,6 +169,7 @@ public class FavoritesFragment extends BrowseFragment {
     private void setupEventListeners() {
 
         setOnItemViewClickedListener(new ItemViewClickedListener());
+        setOnItemViewSelectedListener(new ItemViewSelectedListener());
     }
 
     private final class ItemViewClickedListener implements OnItemViewClickedListener {
@@ -187,6 +196,17 @@ public class FavoritesFragment extends BrowseFragment {
                     Toast.makeText(getActivity(), ((String) item), Toast.LENGTH_SHORT)
                             .show();
             }
+        }
+    }
+
+    /*
+        Use to track selected row
+     */
+    private final class ItemViewSelectedListener implements OnItemViewSelectedListener {
+        @Override
+        public void onItemSelected(Presenter.ViewHolder itemViewHolder, Object item,
+                                   RowPresenter.ViewHolder rowViewHolder, Row row) {
+            mRow = (int) row.getHeaderItem().getId();
         }
     }
 
