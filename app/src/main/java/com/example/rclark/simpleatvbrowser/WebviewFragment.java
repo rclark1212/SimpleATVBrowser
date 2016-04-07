@@ -24,6 +24,7 @@ public class WebviewFragment extends Fragment {
 
     public WebView mWView;
     private boolean mbDontUpdate;
+    private Bundle webViewBundle;
 
     //The UA string to convince websites we are a desktop browser...(finding it does not really work though). FIXME
     private final static String UA_DESKTOP = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/20100101 Firefox/4.0";
@@ -91,6 +92,29 @@ public class WebviewFragment extends Fragment {
                     + " must implement OnMainActivityCallbackListener");
         }
     }
+
+    //
+    //  Use onPause to save the webview state
+    //
+    @Override
+    public void onPause() {
+        super.onPause();
+        webViewBundle = new Bundle();
+        mWView.saveState(webViewBundle);
+    }
+
+    //
+    //  Use onActivityCreated to restore the state
+    //
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        if (webViewBundle != null) {
+            mWView.restoreState(webViewBundle);
+        }
+    }
+
 
     //
     //  Zoom function
