@@ -30,7 +30,8 @@ import com.example.rclark.simpleatvbrowser.data.FavContract;
 import java.util.ArrayList;
 
 /**
- * Created by rclar on 4/4/2016.
+ * Created by rclark on 4/4/2016.
+ * Taken from google android tv sample code and modified...
  */
 public class FavoritesFragment extends BrowseFragment {
     private static final String TAG = "FavoritesFragment";

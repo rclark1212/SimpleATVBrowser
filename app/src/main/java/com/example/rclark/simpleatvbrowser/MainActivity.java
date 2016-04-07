@@ -4,7 +4,10 @@ package com.example.rclark.simpleatvbrowser;
     Simple (less simple now) browser for ATV.
     Started with a phone/tablet project and just added the LEANBACK intents + some controller support.
     Redid into a second project "HackATVBrowser2" which starts with an ATV project (may make some difference)
-
+    Redid into this third project which started simple and got less simple.
+    Yes - this file a bit big and messy. Really should split into utility routines.
+    All button/action processing done in this routine.
+    Three fragments used - searchbar is one. Then there is a container for either a webview or a browseview for favorites
  */
 
 import android.animation.Animator;
@@ -657,9 +660,6 @@ public class MainActivity extends Activity implements
 
             c.close();
 
-        } else {
-            //toggle off favorite for the currently selected favorites item
-            //FIXME - todo
         }
     }
 
@@ -701,6 +701,10 @@ public class MainActivity extends Activity implements
     }
 
 
+    /*
+        Routine which swaps the fragments around to show either webview or favorites view.
+        false = webview, true = favorites.
+     */
     private void showFavorites(boolean bShow) {
 
         //create fragment if it does not exist
@@ -784,7 +788,7 @@ public class MainActivity extends Activity implements
 
             mlpw.show();
 
-            //set up a listener to exit if dpad right/left pressed
+            //set up a listener to exit popup if dpad right/left pressed
             ListView lv = (ListView) mlpw.getListView();
             if (lv != null) {
                 lv.setOnKeyListener(new ListView.OnKeyListener() {
@@ -803,7 +807,7 @@ public class MainActivity extends Activity implements
 
 
     /*
-        Adds an url to our list...
+        Adds an url to our history list...
      */
     private void addToList(String url) {
         //first, does this url exist in the list?
@@ -827,6 +831,7 @@ public class MainActivity extends Activity implements
 
     /*
         Throw up simple help dialog here
+        FIXME - turn into a nice html page (heck, we have a web browser...)
      */
     private void showHelp() {
 

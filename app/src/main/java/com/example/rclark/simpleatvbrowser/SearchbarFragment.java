@@ -19,6 +19,7 @@ import java.util.List;
 
 /**
  * Created by rclark on 3/30/2016.
+ * Implements the searchbar for the browser.
  */
 public class SearchbarFragment extends Fragment {
 

@@ -4,7 +4,7 @@ import android.graphics.drawable.Drawable;
 
 /**
  * Created by rclar on 4/4/2016.
- * Yes, really am using this as a structure...
+ * Yes, really am using this as a structure... Consider me shamed for inefficiency...
  */
 public class ObjectDetail {
     public String url;

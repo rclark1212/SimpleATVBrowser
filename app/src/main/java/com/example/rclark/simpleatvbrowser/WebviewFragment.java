@@ -14,7 +14,6 @@ import android.webkit.WebViewClient;
 
 /**
  * Created by rclark on 3/30/2016.
- * FIXME - need to save/restore state on fragment swap
  */
 public class WebviewFragment extends Fragment {
 

@@ -7,7 +7,8 @@ import android.util.Log;
 import android.view.ViewGroup;
 
 /**
- * Created by rclar on 4/4/2016.
+ * Created by rclark on 4/4/2016.
+ * Taken from android tv sample app and modified slightly.
  */
 public class CardPresenter extends Presenter {
     private static final String TAG = "CardPresenter";
