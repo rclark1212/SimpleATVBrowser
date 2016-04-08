@@ -197,6 +197,10 @@ public class WebviewFragment extends Fragment {
         //Set webview to our overriden class...
         view.setWebViewClient(new MyWebViewClient());
 
+        //finally, set scroll bars...
+        mWView.setVerticalScrollBarEnabled(true);
+        mWView.setScrollbarFadingEnabled(true);
+
     }
 
     /*

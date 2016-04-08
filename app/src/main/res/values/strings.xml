@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Sample Browser</string>
+    <string name="app_name">Simple Browser</string>
     <string name="favorites">Favorite Web Sites</string>
-    <string name="help_title">Sample Browser Help</string>
+    <string name="help_title">Simple Browser Help</string>
     <string name="help_msg">Controller shortcuts:\nVoice Button = Voice Search\nY Button = Focus to Help Button on Top Bar\nB Button = Back\nLeft Shoulder = Zoom Out\nRight Shoulder = Zoom In\nLeft Stick = Pan on Page/Scroll\nRight Stick = Virtual Mouse\nFavorites (heart) button toggles a web page as favorite. If you have favorites, home button will take you to the favorites screen (and launching app will start there).\nAddress Entry Rules - If we think it is a valid URL, we load it. Otherwise we kick off a google search with the terms in the address bar\nThis sample does support javascript and cookies.\nNote that there is no caching, optimizations plugin support or cookie security in this simple example.</string>
 
 <!--

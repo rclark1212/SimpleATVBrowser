@@ -27,6 +27,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -294,12 +295,42 @@ public class MainActivity extends Activity implements
         Hides on screen keyboard if showing
      */
     private void hideKeyboard() {
-        View view = this.getCurrentFocus();
-        if (view != null) {
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        if (!isKeyboardHidden()) {
+            View view = this.getCurrentFocus();
+            if (view != null) {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
         }
     }
+
+
+    /*
+        indicates if keyboard hidden or not
+     */
+    private boolean isKeyboardHidden() {
+        //ugg - no android routine to do this...
+        //so need to measure screen.
+        boolean bret = true;
+
+        //this really only an issue during webview...
+        Rect r = new Rect();
+        if (mWebFragment != null) {
+
+            if (mWebFragment.mWView != null) {
+                mWebFragment.mWView.getWindowVisibleDisplayFrame(r);
+
+                //ratio if keyboard shown will be > 2:1
+                if (r.height() > 0) {
+                    if (r.width() >= (r.height() * 2)) {
+                        bret = false;
+                    }
+                }
+            }
+        }
+        return bret;
+    }
+
 
     /*
         Check if this is a valid URL.
@@ -374,7 +405,7 @@ public class MainActivity extends Activity implements
     public boolean dispatchGenericMotionEvent(MotionEvent event) {
         if (event != null) {
             //check that webfragment is visible
-            if (isWebFragmentActive()) {
+            if (isWebFragmentActive() && isKeyboardHidden()) {
                 //Check that this is a move action (rather than hover which the RS mouse sends)
                 if (event.getAction() == MotionEvent.ACTION_MOVE) {
                     float x = event.getAxisValue(MotionEvent.AXIS_X);
@@ -524,35 +555,42 @@ public class MainActivity extends Activity implements
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.back: {
+                hideKeyboard();
                 showFavorites(false);
                 goBack();
                 break;
             }
             case R.id.forward: {
+                hideKeyboard();
                 showFavorites(false);
                 goForward();
                 break;
             }
             case R.id.voice: {
+                hideKeyboard();
                 doVoiceSearch();;
                 break;
             }
             case R.id.refresh: {
                 //loadPage();
+                hideKeyboard();
                 showFavorites(false);
                 mWebFragment.mWView.reload();
                 break;
             }
             case R.id.help: {
+                hideKeyboard();
                 showHelp();
                 break;
             }
             case R.id.dropdown: {
+                hideKeyboard();
                 popupList();
                 break;
             }
             case R.id.home: {
                 //if no favorites, go home
+                hideKeyboard();
                 if (favoriteCount() == 0) {
                     mSearchFragment.updateEditBox(DEFAULT_HOME);
                     loadPage();
@@ -563,6 +601,7 @@ public class MainActivity extends Activity implements
                 break;
             }
             case R.id.favorite: {
+                hideKeyboard();
                 if (isWebFragmentActive()) {
                     updateFavorites(true);
                     break;
