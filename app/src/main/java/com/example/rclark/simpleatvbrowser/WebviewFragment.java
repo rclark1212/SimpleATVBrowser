@@ -2,8 +2,11 @@ package com.example.rclark.simpleatvbrowser;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -211,10 +214,92 @@ public class WebviewFragment extends Fragment {
  */
     private class MyWebViewClient extends WebViewClient {
 
+        private final static String YOUTUBE_ID_PARSE = "watch%3Fv%3D";
+        private final static String YOUTUBE_SPECIAL_CASE = "http://www.youtube.com/?tab";
+
         //want to keep user in this browser instance (and not fire intent for a general system browser)
         @Override
         public boolean shouldOverrideUrlLoading(WebView webView, String url) {
+            //Update this to launch youtube URLs in the native youtube app
+            if (isYoutubeUrl(url)) {
+                // youtube URL
+                if (launchYoutubeUrl(url)) {
+                    return true;
+                }
+            }
             return false;
+        }
+
+        //tries to launch youtube by recovering watch id in url and sending intent.
+        //else will just return false to load within webview
+        private boolean launchYoutubeUrl(String url) {
+            boolean bret = false;
+            //special case youtube from google web page...
+            if (url.startsWith(YOUTUBE_SPECIAL_CASE)) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com"));
+                startActivity(intent);
+                return true;
+            }
+
+            //try to get the ID...
+            int index = url.lastIndexOf(YOUTUBE_ID_PARSE);
+
+            if (((index + YOUTUBE_ID_PARSE.length()) < url.length() && (index > 0))) {
+                String watchend = url.substring(index + YOUTUBE_ID_PARSE.length());
+
+                //build id string by walking down string to first non-alpha char
+                int i = 0;
+                String id = "";
+                char[] buffer = new char[1];
+
+                while (i < watchend.length()) {
+                    watchend.getChars(i, i+1, buffer, 0);
+                    if (isNumberLetter(buffer[0])) {
+                        id = id + watchend.substring(i, i+1);
+                    }
+                    else {
+                        break;
+                    }
+                    i++;
+                }
+
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + id));
+                    startActivity(intent);
+                    bret = true;
+                } catch (ActivityNotFoundException ex) {
+                    //give up and load web page - or we could load youtube...
+                    bret = false;
+                }
+            }
+            return bret;
+        }
+
+        //returns true if letter or number
+        boolean isNumberLetter(char c) {
+
+            //is it a number?
+            if ((c >= '0') && (c <= '9')) {
+                return true;
+            }
+
+            //upper case?
+            if ((c >= 'A') && (c <= 'Z')) {
+                return true;
+            }
+
+            //lower case
+            if ((c >= 'a') && (c <= 'z')) {
+                return true;
+            }
+
+            return false;
+        }
+
+
+        //returns true if youtube site...
+        private boolean isYoutubeUrl(String url) {
+            return (url.contains("youtube:") || url.contains("www.youtube.com") || url.contains("m.youtube.com"));
         }
 
         //when you click page to page, want address bar to show new address

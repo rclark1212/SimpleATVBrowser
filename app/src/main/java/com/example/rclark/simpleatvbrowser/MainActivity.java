@@ -97,7 +97,7 @@ public class MainActivity extends Activity implements
     private final static int PAN_SCALE_FACTOR = 50;             //change this constant to change the pan speed
     private final static int ANIMTIME = 100;                    //100ms animations - speed is what we are after...
 
-    //Prefix term for a google search
+    //Prefix term for a google search (in case text entered not a url)
     private final static String GOOGLE_SEARCH = "http://www.google.com/#q=";
 
     //Some ordinal defines...
@@ -351,7 +351,9 @@ public class MainActivity extends Activity implements
         if (event != null) {
             if (event.getAction() == KeyEvent.ACTION_DOWN) {
                 if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_Y) {
-                    mWebFragment.mWView.setScrollY(0);      //reset to top of page...
+                    if (isWebFragmentActive()) {
+                        mWebFragment.mWView.setScrollY(0);      //reset to top of page...
+                    }
                     //always show search bar if we go to info button...
                     showSearchBar(true);
                     mSearchFragment.mvHelp.requestFocus();
