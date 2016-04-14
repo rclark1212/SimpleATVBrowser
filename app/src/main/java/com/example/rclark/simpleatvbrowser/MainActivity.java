@@ -17,6 +17,7 @@ import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.app.SearchManager;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Context;
@@ -112,6 +113,7 @@ public class MainActivity extends Activity implements
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        boolean bOpenByIntent = false;          //indicate an intent other than launcher kicked us off
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -129,6 +131,21 @@ public class MainActivity extends Activity implements
         //set the initial edittext...
         mSearchFragment.updateEditBox(DEFAULT_HOME);
 
+        //urp - lets see if we got started via an intent other than launcher here...
+        Intent receivedIntent = getIntent();
+        if (receivedIntent != null) {
+            //okay - could be a view intent, web search intent
+            //if it is, grab the data and populate edit box with it
+            if(receivedIntent.equals(Intent.ACTION_VIEW)) {
+                mSearchFragment.updateEditBox(receivedIntent.getData().toString());
+                bOpenByIntent = true;
+            } else if (receivedIntent.equals(Intent.ACTION_WEB_SEARCH)) {
+                //okay, now get the data...
+                mSearchFragment.updateEditBox(receivedIntent.getStringExtra(SearchManager.QUERY));
+                bOpenByIntent = true;
+            }
+        }
+
         //should we open favorites or main? depends on if there are favorites...
         loadPage();
 
@@ -138,7 +155,8 @@ public class MainActivity extends Activity implements
         //hide keyboard
         hideKeyboard();
 
-        if (favoriteCount() > 0) {
+        //Only go to favorites screen on start if we were launched by launcher
+        if ((favoriteCount() > 0) && !bOpenByIntent) {
             showFavorites(true);
         }
 
