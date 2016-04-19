@@ -354,7 +354,21 @@ public class MainActivity extends Activity implements
         Check if this is a valid URL.
      */
     private boolean isValidUrl(String url) {
-        return Patterns.WEB_URL.matcher(url).matches();
+        boolean bret = false;
+
+        //is it a url pattern match
+        if (Patterns.WEB_URL.matcher(url).matches()) {
+            bret = true;
+        }
+
+        //if anyone tries to actually type in http:// or https://, try to load it
+        if (url.length() > "https://".length()) {
+            if (url.startsWith("http://") || url.startsWith("https://")) {
+                bret = true;
+            }
+        }
+
+        return bret;
     }
 
 
