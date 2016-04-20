@@ -63,6 +63,8 @@ import android.widget.Toast;
 import com.example.rclark.simpleatvbrowser.data.FavContract;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
@@ -95,7 +97,7 @@ public class MainActivity extends Activity implements
     private int mZoom = 0;      //used to track zoom status
     private final static float ZOOMIN_VALUE = 1.5f;             //change this constant to change the zoom step
     private final static float ZOOMOUT_VALUE = 1/ZOOMIN_VALUE;
-    private final static int PAN_SCALE_FACTOR = 50;             //change this constant to change the pan speed
+    private final static int PAN_SCALE_FACTOR = 40;             //change this constant to change the pan speed
     private final static int ANIMTIME = 100;                    //100ms animations - speed is what we are after...
 
     //Prefix term for a google search (in case text entered not a url)
@@ -210,30 +212,8 @@ public class MainActivity extends Activity implements
             }
         }
 
-        /* FIX animation below...
-        if (show) {
-            if (mvControls.getVisibility() != View.VISIBLE) {
-                mvControls.animate().setDuration(ANIMTIME);
-                //mView.animate().translationYBy(mvControls.getHeight());
-                mvControls.animate().translationYBy(mvControls.getHeight()).withEndAction(new Runnable() {
-                    @Override
-                    public void run() {
-                        mvControls.setVisibility(View.VISIBLE);
-                    }
-                });
-            }
-        } else {
-            if (mvControls.getVisibility() == View.VISIBLE) {
-                mvControls.animate().setDuration(ANIMTIME);
-                //mView.animate().translationYBy(-mvControls.getHeight());
-                mvControls.animate().translationYBy(-mvControls.getHeight()).withEndAction(new Runnable() {
-                    @Override
-                    public void run() {
-                        mvControls.setVisibility(View.GONE);
-                    }
-                });
-            }
-        } */
+        //If you want some nice animation... Do it here...
+        //As speed is a virtue, don't bother with animatio at this point.
     }
 
 
@@ -258,12 +238,30 @@ public class MainActivity extends Activity implements
         Note - dynamically loads fragment if it does not exist...
      */
     private void loadPage() {
+        //two special cases we will make here...
+        //if user types in http:// or https:// in front of page, we will assume it is real (and not search)
+        //if the user types in "help", we will special case to help file
         //first, make sure to show web page when loading a page
+        boolean bOverride = false;
+        boolean bHelp = false;
+
         showFavorites(false);
 
         //Get the edit box text
         String url = mSearchFragment.getEditBox();
         String http = url;
+
+        //is the url "help?"
+        if (url.equals("help")) {
+            bHelp = true;
+        }
+
+        //if anyone tries to actually type in http:// or https://, try to load it
+        if (url.length() > "https://".length()) {
+            if (url.startsWith("http://") || url.startsWith("https://")) {
+                bOverride = true;
+            }
+        }
 
         //Does it have a valid prefix? (note, this is assumptive code that http:// is in right spot)
         //if not, add it.
@@ -274,8 +272,10 @@ public class MainActivity extends Activity implements
         //note - hide keyboard if showing...
         hideKeyboard();
 
-        //Now is this a valid http url?
-        if (isValidUrl(http)) {
+        if (bHelp) {
+            //show help
+            showHelp();
+        } else if (isValidUrl(http) || bOverride) {         //Now is this a valid http url?
             //add this url to the list
             addToList(url);
             //if so, go ahead and load (and don't bother setting the edit text url with the full address)
@@ -354,21 +354,8 @@ public class MainActivity extends Activity implements
         Check if this is a valid URL.
      */
     private boolean isValidUrl(String url) {
-        boolean bret = false;
-
         //is it a url pattern match
-        if (Patterns.WEB_URL.matcher(url).matches()) {
-            bret = true;
-        }
-
-        //if anyone tries to actually type in http:// or https://, try to load it
-        if (url.length() > "https://".length()) {
-            if (url.startsWith("http://") || url.startsWith("https://")) {
-                bret = true;
-            }
-        }
-
-        return bret;
+        return (Patterns.WEB_URL.matcher(url).matches());
     }
 
 
@@ -904,22 +891,12 @@ public class MainActivity extends Activity implements
 
     /*
         Throw up simple help dialog here
-        FIXME - turn into a nice html page (heck, we have a web browser...)
      */
     private void showHelp() {
 
-        String title = getApplicationContext().getResources().getString(R.string.help_title);
-        String msg = getApplicationContext().getResources().getString(R.string.help_msg);
+        showFavorites(false);
 
-
-        new AlertDialog.Builder(this)
-                .setTitle(title)
-                .setMessage(msg)
-                .setNeutralButton("Ok", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        // continue
-                    }
-                }).show();
+        loadWebUrl("file:///android_asset/simple_browser_help.html", true);
     }
 
 }
