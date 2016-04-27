@@ -2,7 +2,7 @@
 <resources>
     <color name="primary">#76b900</color>
     <color name="primary_dark">#468900</color>
-    <color name="default_background">#244840</color>
+    <color name="brand_color">#244840</color>
     <color name="selected_background">#76b900</color>
     <!-- used for highlight on browseview -->
     <color name="fastlane_background">#468900</color>
