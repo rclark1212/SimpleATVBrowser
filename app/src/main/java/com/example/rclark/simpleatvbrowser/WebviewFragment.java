@@ -19,9 +19,12 @@ import android.app.Fragment;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -193,6 +196,25 @@ public class WebviewFragment extends Fragment {
         webSettings.setDomStorageEnabled(true);
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         webSettings.setAllowFileAccess(true);
+
+        //more settings for HTML5
+        webSettings.setDatabaseEnabled(true);
+        webSettings.setAllowContentAccess(true);
+        webSettings.setAllowFileAccess(true);
+        webSettings.setAllowFileAccessFromFileURLs(true);
+        webSettings.setAllowUniversalAccessFromFileURLs(true);
+        webSettings.setGeolocationEnabled(true);
+
+        PackageManager pm = getActivity().getPackageManager();
+        String pkgname = getActivity().getPackageName();
+        try {
+            PackageInfo pi = pm.getPackageInfo(pkgname, 0);
+            webSettings.setGeolocationDatabasePath(pi.applicationInfo.dataDir);
+            webSettings.setAppCachePath(pi.applicationInfo.dataDir);
+            webSettings.setAppCacheEnabled(true);
+        } catch (PackageManager.NameNotFoundException e) {
+            //should log error...
+        }
 
         //Set up to support zoom...
         webSettings.setSupportZoom(true);
