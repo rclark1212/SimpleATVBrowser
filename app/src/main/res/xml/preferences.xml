@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+    pan speed
+    -youtube launch
+    home page
+    zoom scale
+    -allow file/db access
+    UA string
+    -->
+    <CheckBoxPreference
+        android:key="@string/key_enable_file_access"
+        android:title="@string/pref_enable_file_access"
+        android:summary="@string/pref_enable_file_access_summ"
+        android:defaultValue="true" />
+
+    <CheckBoxPreference
+        android:key="@string/key_enable_youtube_apk"
+        android:title="@string/pref_enable_youtube_apk"
+        android:summary="@string/pref_enable_youtube_apk_summ"
+        android:defaultValue="true" />
+
+    <ListPreference
+        android:key="@string/key_pan_speed"
+        android:title="@string/pref_pan_speed"
+        android:summary="@string/pref_pan_speed_summ"
+        android:entries="@array/pref_names"
+        android:defaultValue="@array/pref_default"
+        android:entryValues="@array/pref_values" />
+
+    <ListPreference
+        android:key="@string/key_zoom_speed"
+        android:title="@string/pref_zoom_speed"
+        android:summary="@string/pref_zoom_speed_summ"
+        android:entries="@array/pref_names"
+        android:defaultValue="@array/pref_default"
+        android:entryValues="@array/pref_values" />
+
+    <EditTextPreference
+        android:key="@string/key_web_home"
+        android:title="@string/pref_web_home"
+        android:summary="@string/pref_web_home_summ"
+        android:defaultValue="@string/web_home_default" />
+
+    <EditTextPreference
+        android:key="@string/key_ua_string"
+        android:title="@string/pref_ua_string"
+        android:summary="@string/pref_ua_string_summ"
+        android:defaultValue="@string/ua_string_default" />
+
+
+</PreferenceScreen>

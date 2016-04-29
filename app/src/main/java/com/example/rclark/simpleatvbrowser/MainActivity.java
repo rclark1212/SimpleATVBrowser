@@ -87,7 +87,6 @@ public class MainActivity extends Activity implements
     private final static float ZOOMIN_VALUE = 1.5f;             //change this constant to change the zoom step
     private final static float ZOOMOUT_VALUE = 1/ZOOMIN_VALUE;
     private final static int PAN_SCALE_FACTOR = 40;             //change this constant to change the pan speed
-    private final static int ANIMTIME = 100;                    //100ms animations - speed is what we are after...
 
     //Prefix term for a google search (in case text entered not a url)
     private final static String GOOGLE_SEARCH = "http://www.google.com/#q=";

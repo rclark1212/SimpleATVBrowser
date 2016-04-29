@@ -4,19 +4,27 @@
     <string name="help_title">Simple Browser Help</string>
     <string name="help_msg">Controller shortcuts:\nVoice Button = Voice Search\nY Button = Focus to Help Button on Top Bar\nB Button = Back\nLeft Shoulder = Zoom Out\nRight Shoulder = Zoom In\nLeft Stick = Pan on Page/Scroll\nRight Stick = Virtual Mouse\nFavorites (heart) button toggles a web page as favorite. If you have favorites, home button will take you to the favorites screen (and launching app will start there).\nAddress Entry Rules - If we think it is a valid URL, we load it. Otherwise we kick off a google search with the terms in the address bar\nThis sample does support javascript and cookies.\nNote that there is no caching, optimizations plugin support or cookie security in this simple example.</string>
 
-<!--
-Controller shortcuts:
-Voice Button = Voice Search
-Y Button = Focus to Help Button on Top Bar
-B Button = Back
-Left Shoulder = Zoom Out
-Right Shoulder = Zoom In
-Left Stick = Pan on Page/Scroll
-Right Stick = Virtual Mouse
-Address Entry Rules - If we think it is a valid URL, we load it. Otherwise we kick off a google search with the terms in the address bar
-Favorites (heart) button toggles a web page as favorite. If you have favorites, home button will take you to the favorites screen (and launching app will start there).
-This sample does support javascript and cookies.
-Note that there is no caching, optimizations, plugin support or cookie security in this simple example.
--->
+    <!-- preferences -->
+    <string name="key_enable_file_access">enable_file_db</string>
+    <string name="pref_enable_file_access">Enable File and DB access</string>
+    <string name="pref_enable_file_access_summ">Part of the HTML5 spec - allow web sites to access a sandboxed filesystem</string>
+    <string name="key_enable_youtube_apk">enable_youtube</string>
+    <string name="pref_enable_youtube_apk">Use Youtube App</string>
+    <string name="pref_enable_youtube_apk_summ">Open Youtube videos in the app instead of trying to play in webview</string>
+    <string name="key_pan_speed">pan_speed</string>
+    <string name="pref_pan_speed">Panning Speed</string>
+    <string name="pref_pan_speed_summ">Choose panning speed</string>
+    <string name="key_zoom_speed">zoom_level</string>
+    <string name="pref_zoom_speed">Zoom Level</string>
+    <string name="pref_zoom_speed_summ">Set the amount of zoom per step</string>
+    <string name="key_web_home">homepage</string>
+    <string name="pref_web_home">Default Home Page</string>
+    <string name="pref_web_home_summ">Where browser starts if there are no favorites</string>
+    <string name="web_home_default">www.google.com</string>
+    <string name="key_ua_string">ua_string</string>
+    <string name="pref_ua_string">UA string sent to websites</string>
+    <string name="pref_ua_string_summ">Some websites use the UA string to determine how to treat your browser</string>
+    <string name="ua_string_default">Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/20100101 Firefox/4.0</string>
+
 
 </resources>
