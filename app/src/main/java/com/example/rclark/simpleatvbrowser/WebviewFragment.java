@@ -19,11 +19,13 @@ import android.app.Fragment;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -46,7 +48,7 @@ public class WebviewFragment extends Fragment {
     private Bundle webViewBundle;
 
     //The UA string to convince websites we are a desktop browser...(finding it does not really work though). FIXME
-    private final static String UA_DESKTOP = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/20100101 Firefox/4.0";
+    //private final static String UA_DESKTOP = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/20100101 Firefox/4.0";
 
     OnMainActivityCallbackListener mCallback;
     //Put in an interface for container activity to implement so that fragment can deliver messages
@@ -181,6 +183,49 @@ public class WebviewFragment extends Fragment {
         mWView.loadUrl(url);
     }
 
+    /**
+     * Break the settings call into 2. Fixed settings we set in initWebView.
+     * These settings may get updated due to preference changes.
+     * @param view
+     */
+    public void updateWebView(WebView view){
+
+        if (view != null) {
+
+            WebSettings webSettings = view.getSettings();
+
+            if (webSettings != null) {
+
+                //load the prefs...
+                SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                boolean bAllowFileDB = pref.getBoolean(getResources().getString(R.string.key_enable_file_access), true);
+
+                //more settings for HTML5
+                webSettings.setDatabaseEnabled(bAllowFileDB);
+                webSettings.setAllowContentAccess(bAllowFileDB);
+                webSettings.setAllowFileAccess(bAllowFileDB);
+                webSettings.setAllowFileAccessFromFileURLs(bAllowFileDB);
+                webSettings.setAllowUniversalAccessFromFileURLs(bAllowFileDB);
+                webSettings.setGeolocationEnabled(bAllowFileDB);
+
+                PackageManager pm = getActivity().getPackageManager();
+                String pkgname = getActivity().getPackageName();
+                try {
+                    PackageInfo pi = pm.getPackageInfo(pkgname, 0);
+                    webSettings.setGeolocationDatabasePath(pi.applicationInfo.dataDir);
+                    webSettings.setAppCachePath(pi.applicationInfo.dataDir);
+                    webSettings.setAppCacheEnabled(bAllowFileDB);
+                } catch (PackageManager.NameNotFoundException e) {
+                    //should log error...
+                }
+
+                //Set UA string to try to get desktop sites (again, doesn't really work).
+                String UAString = pref.getString(getResources().getString(R.string.key_ua_string), getString(R.string.ua_string_default));
+                webSettings.setUserAgentString(UAString);
+            }
+        }
+    }
+
     /*
     This routine initializes the webview we use.
     */
@@ -197,25 +242,6 @@ public class WebviewFragment extends Fragment {
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         webSettings.setAllowFileAccess(true);
 
-        //more settings for HTML5
-        webSettings.setDatabaseEnabled(true);
-        webSettings.setAllowContentAccess(true);
-        webSettings.setAllowFileAccess(true);
-        webSettings.setAllowFileAccessFromFileURLs(true);
-        webSettings.setAllowUniversalAccessFromFileURLs(true);
-        webSettings.setGeolocationEnabled(true);
-
-        PackageManager pm = getActivity().getPackageManager();
-        String pkgname = getActivity().getPackageName();
-        try {
-            PackageInfo pi = pm.getPackageInfo(pkgname, 0);
-            webSettings.setGeolocationDatabasePath(pi.applicationInfo.dataDir);
-            webSettings.setAppCachePath(pi.applicationInfo.dataDir);
-            webSettings.setAppCacheEnabled(true);
-        } catch (PackageManager.NameNotFoundException e) {
-            //should log error...
-        }
-
         //Set up to support zoom...
         webSettings.setSupportZoom(true);
 
@@ -230,16 +256,15 @@ public class WebviewFragment extends Fragment {
         //Set defalts for caching...
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
-        //Set UA string to try to get desktop sites (again, doesn't really work). FIXME
-        webSettings.setUserAgentString(UA_DESKTOP);
-
         //Set webview to our overriden class...
         view.setWebViewClient(new MyWebViewClient());
 
         //finally, set scroll bars...
-        mWView.setVerticalScrollBarEnabled(true);
-        mWView.setScrollbarFadingEnabled(true);
+        view.setVerticalScrollBarEnabled(true);
+        view.setScrollbarFadingEnabled(true);
 
+        //now the rest of the settings
+        updateWebView(view);
     }
 
     /*
@@ -335,6 +360,14 @@ public class WebviewFragment extends Fragment {
 
         //returns true if youtube site...
         private boolean isYoutubeUrl(String url) {
+            //take a look at prefs...
+            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            boolean bUseYoutube = pref.getBoolean(getString(R.string.key_enable_youtube_apk), true);
+
+            if (!bUseYoutube) {
+                return false;
+            }
+
             return (url.contains("youtube:") || url.contains("www.youtube.com") || url.contains("m.youtube.com"));
         }
 

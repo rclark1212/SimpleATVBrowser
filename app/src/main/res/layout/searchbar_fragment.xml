@@ -5,19 +5,19 @@
     android:background="@color/primary"
     android:layout_height="match_parent">
     <ImageButton
-        android:id="@+id/help"
+        android:id="@+id/settings"
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
         android:onClick="onClick"
         style="@android:style/Widget.Material.Light.Button.Borderless"
-        android:src="@drawable/help"/>
+        android:src="@drawable/settings"/>
 
     <ImageButton
         android:id="@+id/home"
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
         android:onClick="onClick"
-        android:layout_toRightOf="@id/help"
+        android:layout_toRightOf="@id/settings"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/home"/>
 

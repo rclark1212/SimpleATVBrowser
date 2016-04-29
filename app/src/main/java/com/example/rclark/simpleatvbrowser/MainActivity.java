@@ -69,7 +69,7 @@ public class MainActivity extends Activity implements
     private View mvControls;
 
     //default home url
-    private final static String DEFAULT_HOME = "www.google.com";
+    private static String m_default_home = "www.google.com";
 
     //Variables for the history list
     ListPopupWindow mlpw;        //popup window
@@ -77,6 +77,7 @@ public class MainActivity extends Activity implements
     private final static int MAX_HISTORY = 10;
     //Preference key for history
     private final static String HISTORY_LIST = "history_list";
+    private static final String PREFS_HAS_RUN_ALREADY = "prefs_has_run_already";
 
     //Fragments...
     SearchbarFragment mSearchFragment;
@@ -84,22 +85,27 @@ public class MainActivity extends Activity implements
     FavoritesFragment mFavoritesFragment;
 
     private int mZoom = 0;      //used to track zoom status
-    private final static float ZOOMIN_VALUE = 1.5f;             //change this constant to change the zoom step
-    private final static float ZOOMOUT_VALUE = 1/ZOOMIN_VALUE;
-    private final static int PAN_SCALE_FACTOR = 40;             //change this constant to change the pan speed
+    private static float m_zoom_scale_factor = 1.5f;             //change this constant to change the zoom step
+    private static float m_zoomout_scale_factor = 1/ m_zoom_scale_factor;
+    private static int m_pan_scale_factor = 40;             //change this constant to change the pan speed
 
     //Prefix term for a google search (in case text entered not a url)
     private final static String GOOGLE_SEARCH = "http://www.google.com/#q=";
 
+    //special case for when we re-enter intent from help page...
+    private static String mPageHelpOverwrote = "";
+
     //Some ordinal defines...
-    protected static final int RESULT_SPEECH = 1;               //ordinal for our intent response
-    protected static final int CALLBACK_LOAD_PAGE = 0;
-    protected static final int CALLBACK_HIDE_BAR = 1;
-    protected static final int CALLBACK_SHOW_BAR = 2;
-    protected static final int CALLBACK_UPDATE_URL = 3;
-    protected static final int CALLBACK_HIDE_KEYBOARD = 4;
-    protected static final int CALLBACK_UPDATE_FAVORITE = 5;
-    protected static final int CALLBACK_LOAD_FAVORITE = 6;
+    protected static final int RESULT_SPEECH = 1967;               //ordinal for our intent response
+    protected final static int PREFERENCE_REQUEST_CODE = 1968;
+
+    protected static final int CALLBACK_LOAD_PAGE = 1969;
+    protected static final int CALLBACK_HIDE_BAR = 1970;
+    protected static final int CALLBACK_SHOW_BAR = 1971;
+    protected static final int CALLBACK_UPDATE_URL = 1972;
+    protected static final int CALLBACK_HIDE_KEYBOARD = 1973;
+    protected static final int CALLBACK_UPDATE_FAVORITE = 1974;
+    protected static final int CALLBACK_LOAD_FAVORITE = 1975;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,29 +113,41 @@ public class MainActivity extends Activity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //init pan/zoom and homepage settings
+        updatePanZoomHomeSettings();
+
         //init the history list...
-        m_urlist = new ArrayList<String>();
+        if (m_urlist == null) {
+            //and a few other items
+            m_urlist = new ArrayList<String>();
 
-        //get a view to searchbar
-        mvControls = findViewById(R.id.searchbar_fragment);
+            //get a view to searchbar
+            mvControls = findViewById(R.id.searchbar_fragment);
 
-        //Get the search fragment... (note - webview fragment dynamically loaded when needed)
-        mSearchFragment = (SearchbarFragment) getFragmentManager().findFragmentById(R.id.searchbar_fragment);
+            //Get the search fragment... (note - webview fragment dynamically loaded when needed)
+            mSearchFragment = (SearchbarFragment) getFragmentManager().findFragmentById(R.id.searchbar_fragment);
 
-        //and set up final initialization
+            //and set up final initialization
 
-        //set the initial edittext...
-        mSearchFragment.updateEditBox(DEFAULT_HOME);
+            //set the initial edittext...
+            mSearchFragment.updateEditBox(m_default_home);
+        }
+
+        //initialize prefs...
+        if (isRunningForFirstTime(getApplicationContext())) {
+            //and init the preferences
+            PreferenceManager.setDefaultValues(getApplicationContext(), R.xml.preferences, false);
+        }
 
         //urp - lets see if we got started via an intent other than launcher here...
         Intent receivedIntent = getIntent();
         if (receivedIntent != null) {
             //okay - could be a view intent, web search intent
             //if it is, grab the data and populate edit box with it
-            if(receivedIntent.equals(Intent.ACTION_VIEW)) {
+            if (receivedIntent.getAction().equals(Intent.ACTION_VIEW)) {
                 mSearchFragment.updateEditBox(receivedIntent.getData().toString());
                 bOpenByIntent = true;
-            } else if (receivedIntent.equals(Intent.ACTION_WEB_SEARCH)) {
+            } else if (receivedIntent.getAction().equals(Intent.ACTION_WEB_SEARCH)) {
                 //okay, now get the data...
                 mSearchFragment.updateEditBox(receivedIntent.getStringExtra(SearchManager.QUERY));
                 bOpenByIntent = true;
@@ -151,6 +169,19 @@ public class MainActivity extends Activity implements
         }
 
     }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        //called when we get re-entered. Specifically, help screen from preferences...
+        if (intent != null) {
+            if (intent.getAction().equals(Intent.ACTION_VIEW)) {
+                mPageHelpOverwrote = mSearchFragment.getEditBox();
+                mSearchFragment.updateEditBox(intent.getData().toString());
+                loadPage();
+            }
+        }
+    }
+
 
     //Routine called by search bar fragment to request a page load
     public void onMainActivityCallback(int code, String url) {
@@ -192,7 +223,7 @@ public class MainActivity extends Activity implements
             if (mvControls.getVisibility() != View.VISIBLE) {
                 mvControls.setVisibility(View.VISIBLE);
                 //and when you show searchbar (when it was invisible), put focus on help button
-                mSearchFragment.mvHelp.requestFocus();
+                mSearchFragment.mvSettings.requestFocus();
             }
         } else {
             if (mvControls.getVisibility() == View.VISIBLE) {
@@ -240,7 +271,7 @@ public class MainActivity extends Activity implements
         String http = url;
 
         //is the url "help?"
-        if (url.equals("help")) {
+        if (url.toLowerCase().equals("help")) {
             bHelp = true;
         }
 
@@ -363,19 +394,28 @@ public class MainActivity extends Activity implements
                     }
                     //always show search bar if we go to info button...
                     showSearchBar(true);
-                    mSearchFragment.mvHelp.requestFocus();
+                    mSearchFragment.mvSettings.requestFocus();
+                } else if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+                    //special case first back key when entering to help page from settings...
+                    //users expect back to take them to last web page.
+                    if (mPageHelpOverwrote.length() > 0) {
+                        mSearchFragment.updateEditBox(mPageHelpOverwrote);
+                        mPageHelpOverwrote = "";
+                        bEatKey = true;
+                        loadPage();
+                    }
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_SEARCH) {
                     bEatKey = true;
                     doVoiceSearch();
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_L1) {
                     if ((mZoom > 0) && isWebFragmentActive()) {
                         mZoom--;
-                        mWebFragment.setZoom(ZOOMOUT_VALUE);
+                        mWebFragment.setZoom(m_zoomout_scale_factor);
                     }
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_R1) {
                     if (isWebFragmentActive()) {
                         mZoom++;
-                        mWebFragment.setZoom(ZOOMIN_VALUE);
+                        mWebFragment.setZoom(m_zoom_scale_factor);
                     }
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_BUTTON_B) {
                     if (isWebFragmentActive()) {
@@ -421,7 +461,7 @@ public class MainActivity extends Activity implements
                     float y = event.getAxisValue(MotionEvent.AXIS_Y);
 
                     //scale up the events...
-                    int scale = PAN_SCALE_FACTOR;
+                    int scale = m_pan_scale_factor;
 
                     int px = (int) (x * scale);
                     int py = (int) (y * scale);
@@ -492,6 +532,21 @@ public class MainActivity extends Activity implements
                     //We got something. Go ahead and set the edit box and load the page.
                     mSearchFragment.updateEditBox(text.get(0));
                     loadPage();
+                }
+                break;
+            }
+            case PREFERENCE_REQUEST_CODE: {
+                if (data != null) {
+                    int prefResult = data.getIntExtra(SettingsActivity.PREF_RESULT_KEY, SettingsActivity.PREF_DO_NOTHING);
+
+                    //And now process...
+                    if ((prefResult & SettingsActivity.PREF_DO_SOMETHING) != 0) {
+                        //update web...
+                        mWebFragment.updateWebView(mWebFragment.mWView);
+
+                        //update zoom/pan
+                        updatePanZoomHomeSettings();
+                    }
                 }
                 break;
             }
@@ -587,9 +642,13 @@ public class MainActivity extends Activity implements
                 mWebFragment.mWView.reload();
                 break;
             }
-            case R.id.help: {
+            case R.id.settings: {
+                // Display the settings fragment
                 hideKeyboard();
-                showHelp();
+                Intent intent = new Intent();
+                intent.setClass(getApplicationContext(), SettingsActivity.class);
+                //and start for a result so that we can take care of any UI elements that we have to do when we get back...
+                startActivityForResult(intent, PREFERENCE_REQUEST_CODE);
                 break;
             }
             case R.id.dropdown: {
@@ -601,7 +660,7 @@ public class MainActivity extends Activity implements
                 //if no favorites, go home
                 hideKeyboard();
                 if (favoriteCount() == 0) {
-                    mSearchFragment.updateEditBox(DEFAULT_HOME);
+                    mSearchFragment.updateEditBox(m_default_home);
                     loadPage();
                 } else {
                     //otherwise show favorites
@@ -885,6 +944,54 @@ public class MainActivity extends Activity implements
         showFavorites(false);
 
         loadWebUrl("file:///android_asset/simple_browser_help.html", true);
+    }
+
+    public static boolean isRunningForFirstTime(Context ctx) {
+        boolean bret = true;
+
+        //Get the pref bool flag...
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(ctx);
+        boolean bhasrun = pref.getBoolean(PREFS_HAS_RUN_ALREADY, false);
+
+        if (bhasrun == true) {
+            bret = false;
+        }
+
+        //And, if we are here, we have run for first time so mark preferences as such
+        SharedPreferences.Editor edit = pref.edit();
+        edit.putBoolean(PREFS_HAS_RUN_ALREADY, true);
+        edit.commit();
+
+        return bret;
+    }
+
+    public void updatePanZoomHomeSettings() {
+        //Get the pref bool flag...
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+        String pan = pref.getString(getString(R.string.key_pan_speed), "1");
+        String zoom = pref.getString(getString(R.string.key_zoom_speed), "1");
+
+        m_default_home = pref.getString(getString(R.string.key_web_home), getString(R.string.web_home_default));
+
+        //update pan
+        if (pan.equals("0")) {
+            m_pan_scale_factor = 20;
+        } else if (pan.equals("2")) {
+            m_pan_scale_factor = 75;
+        } else {
+            m_pan_scale_factor = 45;
+        }
+
+        //update zoom
+        if (zoom.equals("0")) {
+            m_zoom_scale_factor = 1.2f;
+        } else if (zoom.equals("2")) {
+            m_zoom_scale_factor = 1.8f;
+        } else {
+            m_zoom_scale_factor = 1.5f;
+        }
+        m_zoomout_scale_factor = 1/ m_zoom_scale_factor;
     }
 
 }

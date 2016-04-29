@@ -5,12 +5,14 @@
     <string name="help_msg">Controller shortcuts:\nVoice Button = Voice Search\nY Button = Focus to Help Button on Top Bar\nB Button = Back\nLeft Shoulder = Zoom Out\nRight Shoulder = Zoom In\nLeft Stick = Pan on Page/Scroll\nRight Stick = Virtual Mouse\nFavorites (heart) button toggles a web page as favorite. If you have favorites, home button will take you to the favorites screen (and launching app will start there).\nAddress Entry Rules - If we think it is a valid URL, we load it. Otherwise we kick off a google search with the terms in the address bar\nThis sample does support javascript and cookies.\nNote that there is no caching, optimizations plugin support or cookie security in this simple example.</string>
 
     <!-- preferences -->
+    <string name="personal_settings">Settings</string>
+    <string name="help">Help</string>
     <string name="key_enable_file_access">enable_file_db</string>
     <string name="pref_enable_file_access">Enable File and DB access</string>
     <string name="pref_enable_file_access_summ">Part of the HTML5 spec - allow web sites to access a sandboxed filesystem</string>
     <string name="key_enable_youtube_apk">enable_youtube</string>
     <string name="pref_enable_youtube_apk">Use Youtube App</string>
-    <string name="pref_enable_youtube_apk_summ">Open Youtube videos in the app instead of trying to play in webview</string>
+    <string name="pref_enable_youtube_apk_summ">Open Youtube URLs in the app instead of trying to play in webview</string>
     <string name="key_pan_speed">pan_speed</string>
     <string name="pref_pan_speed">Panning Speed</string>
     <string name="pref_pan_speed_summ">Choose panning speed</string>

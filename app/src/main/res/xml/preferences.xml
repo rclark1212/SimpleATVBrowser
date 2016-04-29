@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/personal_settings">
     <!--
     pan speed
     -youtube launch
@@ -8,6 +9,15 @@
     -allow file/db access
     UA string
     -->
+
+    <Preference android:title="@string/help">
+        <intent android:action="android.intent.action.VIEW"
+            android:mimeType="http"
+            android:targetPackage="com.example.rclark.simpleatvbrowser"
+            android:targetClass="com.example.rclark.simpleatvbrowser.MainActivity"
+            android:data="help" />
+    </Preference>
+
     <CheckBoxPreference
         android:key="@string/key_enable_file_access"
         android:title="@string/pref_enable_file_access"
@@ -25,7 +35,7 @@
         android:title="@string/pref_pan_speed"
         android:summary="@string/pref_pan_speed_summ"
         android:entries="@array/pref_names"
-        android:defaultValue="@array/pref_default"
+        android:defaultValue="1"
         android:entryValues="@array/pref_values" />
 
     <ListPreference
@@ -33,7 +43,7 @@
         android:title="@string/pref_zoom_speed"
         android:summary="@string/pref_zoom_speed_summ"
         android:entries="@array/pref_names"
-        android:defaultValue="@array/pref_default"
+        android:defaultValue="1"
         android:entryValues="@array/pref_values" />
 
     <EditTextPreference

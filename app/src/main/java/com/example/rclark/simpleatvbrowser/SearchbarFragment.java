@@ -14,7 +14,6 @@
 
 package com.example.rclark.simpleatvbrowser;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
@@ -23,13 +22,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
-import android.webkit.WebView;
 import android.widget.EditText;
-import android.widget.ListPopupWindow;
 import android.widget.TextView;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by rclark on 3/30/2016.
@@ -43,7 +37,7 @@ public class SearchbarFragment extends Fragment {
     public View mvForward;
     public View mvVoice;
     public View mvRefresh;
-    public View mvHelp;
+    public View mvSettings;
     public View mvList;
     public View mvFavorite;
     public View mvHome;
@@ -69,7 +63,7 @@ public class SearchbarFragment extends Fragment {
         mvBack = retView.findViewById(R.id.back);
         mvVoice = retView.findViewById(R.id.voice);
         mvRefresh = retView.findViewById(R.id.refresh);
-        mvHelp = retView.findViewById(R.id.help);
+        mvSettings = retView.findViewById(R.id.settings);
         mvList = retView.findViewById(R.id.dropdown);
         mvFavorite = retView.findViewById(R.id.favorite);
         mvForward = retView.findViewById(R.id.forward);
