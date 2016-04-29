@@ -117,21 +117,18 @@ public class MainActivity extends Activity implements
         updatePanZoomHomeSettings();
 
         //init the history list...
-        if (m_urlist == null) {
-            //and a few other items
-            m_urlist = new ArrayList<String>();
+        m_urlist = new ArrayList<String>();
 
-            //get a view to searchbar
-            mvControls = findViewById(R.id.searchbar_fragment);
+        //get a view to searchbar
+        mvControls = findViewById(R.id.searchbar_fragment);
 
-            //Get the search fragment... (note - webview fragment dynamically loaded when needed)
-            mSearchFragment = (SearchbarFragment) getFragmentManager().findFragmentById(R.id.searchbar_fragment);
+        //Get the search fragment... (note - webview fragment dynamically loaded when needed)
+        mSearchFragment = (SearchbarFragment) getFragmentManager().findFragmentById(R.id.searchbar_fragment);
 
-            //and set up final initialization
+        //and set up final initialization
 
-            //set the initial edittext...
-            mSearchFragment.updateEditBox(m_default_home);
-        }
+        //set the initial edittext...
+        mSearchFragment.updateEditBox(m_default_home);
 
         //initialize prefs...
         if (isRunningForFirstTime(getApplicationContext())) {
