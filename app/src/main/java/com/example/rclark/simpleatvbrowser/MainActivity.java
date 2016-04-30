@@ -95,6 +95,9 @@ public class MainActivity extends Activity implements
     //special case for when we re-enter intent from help page...
     private static String mPageHelpOverwrote = "";
 
+    //semaphore for speech intent
+    private boolean mbInSpeechIntent = false;
+
     //Some ordinal defines...
     protected static final int RESULT_SPEECH = 1967;               //ordinal for our intent response
     protected final static int PREFERENCE_REQUEST_CODE = 1968;
@@ -495,6 +498,10 @@ public class MainActivity extends Activity implements
         Use the standard android intent service for this. This routine kicks off the intent.
      */
     public void doVoiceSearch() {
+        if (mbInSpeechIntent) {
+            //already in an intent
+            return;
+        }
         //set up the intent
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         //intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "en-US");
@@ -503,6 +510,7 @@ public class MainActivity extends Activity implements
         //and kick it off
         try {
             startActivityForResult(intent, RESULT_SPEECH);
+            mbInSpeechIntent = true;
             //and if intent exists, clear out text box
             mSearchFragment.updateEditBox("");
         } catch (ActivityNotFoundException a) {
@@ -523,6 +531,7 @@ public class MainActivity extends Activity implements
         //get the voice search data back - this is only intent we are interested in...
         switch (requestCode) {
             case RESULT_SPEECH: {
+                mbInSpeechIntent = false;
                 if (resultCode == RESULT_OK && null != data) {
                     ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 
