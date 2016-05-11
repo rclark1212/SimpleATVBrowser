@@ -36,6 +36,7 @@ import android.graphics.Movie;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v17.leanback.app.BackgroundManager;
 import android.support.v17.leanback.app.BrowseFragment;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.HeaderItem;
@@ -65,6 +66,7 @@ public class FavoritesFragment extends BrowseFragment {
     private ArrayObjectAdapter mRowsAdapter;
     private ArrayList<ObjectDetail> mObjects;
     private int mRow;
+    private BackgroundManager mBackgroundManager;
 
     public final static int MAX_COLUMNS = 4;
 
@@ -79,6 +81,8 @@ public class FavoritesFragment extends BrowseFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         Log.i(TAG, "onCreate");
         super.onActivityCreated(savedInstanceState);
+
+        prepareBackgroundManager();
 
         setupUIElements();
 
@@ -176,6 +180,14 @@ public class FavoritesFragment extends BrowseFragment {
         }
 
         setAdapter(mRowsAdapter);
+    }
+
+    private void prepareBackgroundManager() {
+
+        mBackgroundManager = BackgroundManager.getInstance(getActivity());
+        mBackgroundManager.attach(getActivity().getWindow());
+        //mBackgroundManager.setDrawable(getResources().getDrawable(R.drawable.default_background));
+        mBackgroundManager.setColor(getResources().getColor(R.color.darkbackground));
     }
 
     private void setupUIElements() {
