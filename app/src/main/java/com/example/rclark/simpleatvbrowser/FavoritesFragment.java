@@ -186,7 +186,6 @@ public class FavoritesFragment extends BrowseFragment {
 
         mBackgroundManager = BackgroundManager.getInstance(getActivity());
         mBackgroundManager.attach(getActivity().getWindow());
-        //mBackgroundManager.setDrawable(getResources().getDrawable(R.drawable.default_background));
         mBackgroundManager.setColor(getResources().getColor(R.color.darkbackground));
     }
 
