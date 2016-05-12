@@ -48,9 +48,14 @@ import android.support.v17.leanback.widget.OnItemViewSelectedListener;
 import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
+import android.support.v17.leanback.widget.TitleView;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.example.rclark.simpleatvbrowser.data.FavContract;
@@ -104,6 +109,33 @@ public class FavoritesFragment extends BrowseFragment {
             throw new ClassCastException(ctx.toString()
                     + " must implement OnMainActivityCallbackListener");
         }
+    }
+
+    /**
+     * Browse fragments - love them, hate them. Adjust layout params to move gravity of title to lefts
+     * @return
+     */
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View v = super.onCreateView(inflater, container, savedInstanceState);
+
+        TitleView titleView = (TitleView) v.findViewById(R.id.browse_title_group);
+
+        if (titleView instanceof TitleView) {
+            for (int i = 0; i < titleView.getChildCount(); i++) {
+                View view = titleView.getChildAt(i);
+                if (view.getVisibility() != View.GONE) {
+                    //get the layout params...
+                    if (view.getLayoutParams() instanceof FrameLayout.LayoutParams) {
+                        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) view.getLayoutParams();
+                        params.gravity = Gravity.LEFT;
+                        view.setLayoutParams(params);
+                    }
+                }
+            }
+        }
+
+        return v;
     }
 
     /*

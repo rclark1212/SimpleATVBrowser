@@ -9,6 +9,7 @@
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
         android:onClick="onClick"
+        android:contentDescription="@string/contdesc_settings"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/settings"/>
 
@@ -17,7 +18,8 @@
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
         android:onClick="onClick"
-        android:layout_toRightOf="@id/settings"
+        android:layout_toEndOf="@id/settings"
+        android:contentDescription="@string/contdesc_home"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/home"/>
 
@@ -26,7 +28,8 @@
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
         android:onClick="onClick"
-        android:layout_toRightOf="@id/home"
+        android:layout_toEndOf="@id/home"
+        android:contentDescription="@string/contdesc_favorite"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/notfavorite"/>
 
@@ -35,7 +38,8 @@
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
         android:onClick="onClick"
-        android:layout_toRightOf="@id/favorite"
+        android:layout_toEndOf="@id/favorite"
+        android:contentDescription="@string/contdesc_back"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/back"/>
 
@@ -44,7 +48,8 @@
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
         android:onClick="onClick"
-        android:layout_toRightOf="@id/back"
+        android:layout_toEndOf="@id/back"
+        android:contentDescription="@string/contdesc_forward"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/forward"/>
 
@@ -53,7 +58,8 @@
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
         android:onClick="onClick"
-        android:layout_toRightOf="@id/forward"
+        android:layout_toEndOf="@id/forward"
+        android:contentDescription="@string/contdesc_voice"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/mic"/>
 
@@ -62,7 +68,8 @@
         android:layout_width="@dimen/button_width"
         android:layout_height="@dimen/button_height"
         android:onClick="onClick"
-        android:layout_toRightOf="@id/voice"
+        android:layout_toEndOf="@id/voice"
+        android:contentDescription="@string/contdesc_refresh"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/refresh"/>
 
@@ -72,6 +79,7 @@
         android:layout_height="@dimen/button_height"
         android:onClick="onClick"
         android:layout_toRightOf="@id/refresh"
+        android:contentDescription="@string/contdesc_dropdown"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:src="@drawable/unfold"/>
 
@@ -83,6 +91,7 @@
         android:singleLine="true"
         android:lines="1"
         android:inputType="text"
-        android:layout_toRightOf="@id/dropdown" />
+        android:contentDescription="@string/contdesc_edit"
+        android:layout_toEndOf="@id/dropdown" />
 
 </RelativeLayout>

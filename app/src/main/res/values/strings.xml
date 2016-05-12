@@ -28,5 +28,15 @@
     <string name="pref_ua_string_summ">Some websites use the UA string to determine how to treat your browser</string>
     <string name="ua_string_default">Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/20100101 Firefox/4.0</string>
 
+    <!-- usability strings -->
+    <string name="contdesc_settings">Settings button</string>
+    <string name="contdesc_home">Home or favorite picker if you have a favorite</string>
+    <string name="contdesc_favorite">Favorites toggle - click to set this web page as a favorite</string>
+    <string name="contdesc_back">Navigate back</string>
+    <string name="contdesc_forward">Navigate forward</string>
+    <string name="contdesc_voice">Voice entry for web url</string>
+    <string name="contdesc_refresh">Refresh web page</string>
+    <string name="contdesc_dropdown">Recent web page history</string>
+    <string name="contdesc_edit">Address bar - enter your url here</string>
 
 </resources>
