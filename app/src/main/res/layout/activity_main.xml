@@ -4,10 +4,10 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.rclark.simpleatvbrowser.MainActivity"
+    tools:context="com.production.rclark.simpleatvbrowser.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <fragment android:name="com.example.rclark.simpleatvbrowser.SearchbarFragment"
+    <fragment android:name="com.production.rclark.simpleatvbrowser.SearchbarFragment"
         android:id="@+id/searchbar_fragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />

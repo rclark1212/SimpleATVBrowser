@@ -25,7 +25,7 @@
  * the License.
  */
 
-package com.example.rclark.simpleatvbrowser;
+package com.production.rclark.simpleatvbrowser;
 
 import android.graphics.drawable.Drawable;
 import android.support.v17.leanback.widget.ImageCardView;

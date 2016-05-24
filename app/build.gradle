@@ -5,7 +5,7 @@ android {
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
     defaultConfig {
-        applicationId "com.example.rclark.simpleatvbrowser"
+        applicationId "com.production.rclark.simpleatvbrowser"
         minSdkVersion 23
         targetSdkVersion 23
         versionCode 1
@@ -24,3 +24,5 @@ dependencies {
     compile 'com.android.support:leanback-v17:23.3.0'
     compile 'com.android.support:preference-leanback-v17:23.3.0'
 }
+
+apply plugin: 'com.google.gms.google-services'

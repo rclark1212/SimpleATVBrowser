@@ -1,4 +1,4 @@
-package com.example.rclark.simpleatvbrowser;
+package com.production.rclark.simpleatvbrowser;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

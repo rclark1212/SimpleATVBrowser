@@ -12,7 +12,7 @@
  * the License.
  */
 
-package com.example.rclark.simpleatvbrowser;
+package com.production.rclark.simpleatvbrowser;
 
 /*
     Simple (less simple now) browser for ATV.
@@ -54,7 +54,7 @@ import android.widget.ListPopupWindow;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.example.rclark.simpleatvbrowser.data.FavContract;
+import com.production.rclark.simpleatvbrowser.data.FavContract;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -694,9 +694,11 @@ public class MainActivity extends Activity implements
 
         Cursor c = getApplicationContext().getContentResolver().query(favoriteDB, null, null, null, null);
 
-        iret = c.getCount();
+        if (c != null) {
+            iret = c.getCount();
 
-        c.close();
+            c.close();
+        }
 
         return iret;
     }
@@ -714,11 +716,13 @@ public class MainActivity extends Activity implements
         Cursor c = getApplicationContext().getContentResolver().query(favoriteSearchUri, null, null, null, null);
 
         //now check if it is stored in favorites already...
-        if (c.getCount() > 0) {
-            bret = true;
-        }
+        if (c != null) {
+            if (c.getCount() > 0) {
+                bret = true;
+            }
 
-        c.close();
+            c.close();
+        }
 
         return bret;
     }
@@ -742,7 +746,7 @@ public class MainActivity extends Activity implements
             Cursor c = getApplicationContext().getContentResolver().query(favoriteSearchUri, null, null, null, null);
 
             //now check if it is stored in favorites already...
-            if (c.getCount() > 0) {
+            if (c != null && c.getCount() > 0) {
                 c.moveToFirst();
                 if (btoggle) {
                     //if it is in favorites and we are toggling, delete

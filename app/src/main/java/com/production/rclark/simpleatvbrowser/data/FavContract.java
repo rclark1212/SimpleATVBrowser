@@ -12,20 +12,19 @@
  * the License.
  */
 
-package com.example.rclark.simpleatvbrowser.data;
+package com.production.rclark.simpleatvbrowser.data;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
-import android.text.format.Time;
 
 /**
  * Created by rclar on 4/4/2016.
  */
 public class FavContract {
 
-    public static final String CONTENT_AUTHORITY = "com.example.rclark.simpleatvbrowser";
+    public static final String CONTENT_AUTHORITY = "com.production.rclark.simpleatvbrowser";
 
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 

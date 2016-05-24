@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.rclark.simpleatvbrowser"
+    package="com.production.rclark.simpleatvbrowser"
     android:versionCode="4"
     android:versionName="0.4">
 
@@ -18,7 +18,7 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name=".MainActivity"
+            android:name="com.production.rclark.simpleatvbrowser.MainActivity"
             android:banner="@drawable/app_icon_your_company"
             android:icon="@drawable/app_icon_your_company"
             android:logo="@drawable/app_icon_your_company"
@@ -50,11 +50,11 @@
             </intent-filter>
 
         </activity>
-        <activity android:name=".SettingsActivity" />
+        <activity android:name="com.production.rclark.simpleatvbrowser.SettingsActivity" />
 
         <provider
-            android:authorities="com.example.rclark.simpleatvbrowser"
-            android:name=".data.FavProvider"
+            android:authorities="com.production.rclark.simpleatvbrowser"
+            android:name="com.production.rclark.simpleatvbrowser.data.FavProvider"
             android:exported="false"
             android:syncable="true" />
 

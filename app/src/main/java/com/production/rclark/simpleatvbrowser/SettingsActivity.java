@@ -1,4 +1,4 @@
-package com.example.rclark.simpleatvbrowser;
+package com.production.rclark.simpleatvbrowser;
 
 import android.app.Activity;
 import android.content.Intent;

@@ -12,7 +12,7 @@
  * the License.
  */
 
-package com.example.rclark.simpleatvbrowser.data;
+package com.production.rclark.simpleatvbrowser.data;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;

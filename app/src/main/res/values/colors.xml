@@ -5,7 +5,7 @@
     <color name="selected_background">#468900</color>
     <!-- used for highlight on browseview -->
     <color name="fastlane_background">#468900</color>
-    <color name="search_opaque">#ffaa3f</color>
+    <color name="search_opaque">#ffe63b</color>
     <color name="scrollbar">#468900</color>
     <color name="darkbackground">#AA101010</color>
     <color name="background_gradient_start">#000000</color>
