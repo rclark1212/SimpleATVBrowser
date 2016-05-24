@@ -13,8 +13,8 @@
     <Preference android:title="@string/help">
         <intent android:action="android.intent.action.VIEW"
             android:mimeType="http"
-            android:targetPackage="com.example.rclark.simpleatvbrowser"
-            android:targetClass="com.example.rclark.simpleatvbrowser.MainActivity"
+            android:targetPackage="com.production.rclark.simpleatvbrowser"
+            android:targetClass="com.production.rclark.simpleatvbrowser.MainActivity"
             android:data="help" />
     </Preference>
 
