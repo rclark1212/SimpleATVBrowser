@@ -37,3 +37,8 @@ Is extremely simple logic. We look for 2 "." in the string. If we don't find htt
 
 Once loading has *completed*, we then check the URL (as you could have been redirected) and we update the edit box address. We also check for favorites here (favorites uses the native URL of the web page).
 
+# Other
+
+Originally intented to drop this onto the google play store as a free browser app. Discovered, however, that google play policies prohibited web browsers for android tv. Ugg. So no play store for SimpleATVBrowser. Leaving it on github though for folks to build themselves if they so choose (or, if you want a signed prebuilt, leaving one in the /app directory).
+
+Note that I do not expect to be active on this project - it does what it needs for me and without ability to distribute, there won't be any user base to speak of to do bug fixes for. i.e. you should clone and modify rather than rely on pull.
