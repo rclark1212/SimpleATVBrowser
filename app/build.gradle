@@ -25,4 +25,3 @@ dependencies {
     compile 'com.android.support:preference-leanback-v17:23.3.0'
 }
 
-apply plugin: 'com.google.gms.google-services'
