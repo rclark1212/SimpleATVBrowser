@@ -26,7 +26,7 @@
     <string name="key_ua_string">ua_string</string>
     <string name="pref_ua_string">UA string sent to websites</string>
     <string name="pref_ua_string_summ">Some websites use the UA string to determine how to treat your browser</string>
-    <string name="ua_string_default">Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/20100101 Firefox/4.0</string>
+    <string name="ua_string_default">Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.67 Safari/537.36</string>
 
     <!-- usability strings -->
     <string name="contdesc_settings">Settings button</string>

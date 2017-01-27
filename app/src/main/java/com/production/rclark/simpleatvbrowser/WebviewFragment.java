@@ -25,12 +25,17 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.GeolocationPermissions;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 
 /**
  * Created by rclark on 3/30/2016.
@@ -44,6 +49,7 @@ public class WebviewFragment extends Fragment {
     public WebView mWView;
     private boolean mbDontUpdate;
     private Bundle webViewBundle;
+    private String mNewHTML;
 
     //The UA string to convince websites we are a desktop browser...(finding it does not really work though). FIXME
     //private final static String UA_DESKTOP = "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.4) Gecko/20100101 Firefox/4.0";
@@ -205,7 +211,6 @@ public class WebviewFragment extends Fragment {
                 webSettings.setAllowFileAccessFromFileURLs(bAllowFileDB);
                 webSettings.setAllowUniversalAccessFromFileURLs(bAllowFileDB);
                 webSettings.setGeolocationEnabled(bAllowFileDB);
-
                 PackageManager pm = getActivity().getPackageManager();
                 String pkgname = getActivity().getPackageName();
                 try {
@@ -219,6 +224,9 @@ public class WebviewFragment extends Fragment {
 
                 //Set UA string to try to get desktop sites (again, doesn't really work).
                 String UAString = pref.getString(getResources().getString(R.string.key_ua_string), getString(R.string.ua_string_default));
+                if (UAString.length() == 0) {
+                    UAString = getString(R.string.ua_string_default);
+                }
                 webSettings.setUserAgentString(UAString);
             }
         }
@@ -248,22 +256,74 @@ public class WebviewFragment extends Fragment {
         webSettings.setUseWideViewPort(true);
 
         //Don't use the zoom controls for ATV
-        //webSettings.setBuiltInZoomControls(true);
         //webSettings.setDisplayZoomControls(false);
+
+        //Try some settings for html5 video per web
+        webSettings.setBuiltInZoomControls(true);
+        webSettings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.NARROW_COLUMNS);
+        webSettings.setSaveFormData(true);
 
         //Set defalts for caching...
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         //Set webview to our overriden class...
         view.setWebViewClient(new MyWebViewClient());
+        //view.setWebChromeClient(new MyWebChromeClient());
 
         //finally, set scroll bars...
         view.setVerticalScrollBarEnabled(true);
         view.setScrollbarFadingEnabled(true);
 
+        //and set up our custom interface (can process html loaded code)
+        view.addJavascriptInterface(new InjectJavaScriptInterface(), "HTMLOUT");
+
         //now the rest of the settings
         updateWebView(view);
     }
+
+    /*
+        Private JavaScript interface for post processing (as needed)
+        see http://stackoverflow.com/questions/5264162/how-to-retrieve-html-content-from-webview-as-a-string
+     */
+    private class InjectJavaScriptInterface
+    {
+
+        @JavascriptInterface
+        @SuppressWarnings("unused")
+        public void processHTML(String html)
+        {
+
+            /*
+            int currentIndex = 0;
+            int newIndex = 0;
+            int count = 0;
+            String find = "<div class=\"title";
+            String replacefmt = "<div tabindex=\"%d\" class=\"title";
+
+            Log.d("JScript Injector","html length start " + html.length());
+            // process the html as needed by the app
+            while ((newIndex = html.indexOf(find,currentIndex)) > 0) {
+                count++;
+                String replace = String.format(replacefmt, count);
+                html = html.replaceFirst(find, replace);
+                currentIndex = newIndex + replace.length();
+                if (currentIndex >= html.length()) {
+                    break;
+                }
+            }
+            Log.d("JScript Injector", "Found/replaced " + count + " instances");
+            Log.d("JScript Injector","html length end " + html.length());
+            if (count > 0) {
+                //set up to reload page...
+                mNewHTML = html;
+            } else {
+                mNewHTML = null;
+            }
+            */
+
+        }
+    }
+
 
     /*
     Private webview class.
@@ -383,6 +443,23 @@ public class WebviewFragment extends Fragment {
 
             //and update favorites
             mCallback.onMainActivityCallback(MainActivity.CALLBACK_UPDATE_FAVORITE, null);
+
+            //mWView.loadUrl("$(\":input\").each(function (i) { $(this).attr('tabindex', i + 1); });");
+            /*
+            //and do any object injection... Note - revert to get rid of all...
+            mWView.loadUrl("javascript:window.HTMLOUT.processHTML('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
+            mWView.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (mNewHTML != null) {
+                        Log.d("Webview", "reloading webview");
+                        mWView.loadData(mNewHTML, "text/html", "UTF-8");
+                    }
+                }
+            }, 1000);
+            if (mNewHTML != null) {
+                Log.d("Webview", "reloading webview in 1 second");
+            }*/
         }
 
         //when you click page to page, want address bar to show new address

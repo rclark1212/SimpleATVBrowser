@@ -9,6 +9,7 @@
         android:id="@+id/webview"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
+        android:focusable="true"
         android:layout_width="match_parent"
         android:scrollbarThumbVertical="@color/scrollbar"
         android:layout_height="match_parent"></WebView>
